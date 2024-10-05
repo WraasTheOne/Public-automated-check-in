@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +23,7 @@
 #define GATTS_TAG "GATTS_SIMPLE"
 #define SERVICE_UUID   0x00FF
 #define CHAR_UUID      0xFF01
-#define DEVICE_NAME    "ESP_SIMPLE_GATT"
+#define DEVICE_NAME    "ESP_SIMPLE_GATT2"
 /** DEFINES **/
 #define WIFI_SUCCESS 1 << 0
 #define WIFI_FAILURE 1 << 1
@@ -203,7 +201,7 @@ esp_err_t connect_tcp_server(void* data, data_type_t type) {
      if (type == DATA_TYPE_INT) {
         // Assume data is a pointer to an int8_t
         int8_t value = *(int8_t*)data;
-        snprintf(sendBuffer, sizeof(sendBuffer), "The value is: %d \n", value);
+        snprintf(sendBuffer, sizeof(sendBuffer), "The value is: %d This is right", value);
     } else if (type == DATA_TYPE_STRING) {
         // Assume data is a pointer to a null-terminated char array
         snprintf(sendBuffer, sizeof(sendBuffer), "The message is: %s \n", (char*)data);
@@ -257,15 +255,15 @@ static esp_ble_adv_params_t adv_params = {
 };
 
 // Function to read RSSI of the connected device
-//void read_rssi_task(void *pvParameter) {
-//    while (1) {
-//        if (device_connected) {
-//            // Read the RSSI of the connected device
-//            esp_ble_gap_read_rssi(connected_device_addr);
-//        }
-//        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay of 1000 ms (1 second)
-//    }
-//}
+void read_rssi_task(void *pvParameter) {
+    while (1) {
+        if (device_connected) {
+            // Read the RSSI of the connected device
+            esp_ble_gap_read_rssi(connected_device_addr);
+        }
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay of 1000 ms (1 second)
+    }
+}
 
 // GAP event handler
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
@@ -282,7 +280,6 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             ESP_LOGE(GATTS_TAG, "Failed to read RSSI, status = %d", param->read_rssi_cmpl.status);
         }
         break;
-
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
         // Store the connected device address and set connected flag
         memcpy(connected_device_addr, param->update_conn_params.bda, sizeof(esp_bd_addr_t));
@@ -337,7 +334,6 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
         break;
 
     case ESP_GATTS_WRITE_EVT:
-        connect_tcp_server(param->write.value, DATA_TYPE_STRING);
         ESP_LOGI(GATTS_TAG, "Write Event: handle = %d, value =", param->write.handle);
         esp_log_buffer_hex(GATTS_TAG, param->write.value, param->write.len);
         esp_ble_gatts_send_response(gatt_if_instance, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
@@ -383,6 +379,8 @@ void app_main(void) {
 
     ESP_ERROR_CHECK(esp_ble_gatts_app_register(0));
 
+    xTaskCreate(&read_rssi_task, "read_rssi_task", 2048, NULL, 5, NULL);
+
     // Create a FreeRTOS task to read RSSI periodically
     esp_ble_gap_set_device_name(DEVICE_NAME);
     esp_ble_gap_config_adv_data(&adv_data);
@@ -400,4 +398,3 @@ void app_main(void) {
 		return;
 	}
 }
-
