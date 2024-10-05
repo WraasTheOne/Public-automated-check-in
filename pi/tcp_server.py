@@ -5,8 +5,19 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
+#rember we have 3 esp32: alpha, beta, omega
+global alpha
+global beta 
+global omega
+alpha = 0
+beta = 0
+omega = 0
+
+#on the esp32:         snprintf(sendBuffer, sizeof(sendBuffer), "{\"device\":\"alpha\", \"value\": %d}", value);
 # Handle incoming TCP connections
+
 async def handle_client(reader, writer):
+    global alpha, beta, omega
     addr = writer.get_extra_info('peername')
     print(f"Received connection from {addr}")
 
@@ -17,12 +28,21 @@ async def handle_client(reader, writer):
             break
 
         message = data.decode()
-        print(f"Received: {message}")
-
         try:
             # Parse the received data as JSON
             parsed_data = json.loads(message)
-            print(f"Parsed JSON: {parsed_data}")
+            #get the device name
+            device = parsed_data["device"]
+            #get the value
+            value = parsed_data["value"]
+            if device == "alpha":
+                alpha = value
+            elif device == "beta":
+                beta = value
+            elif device == "omega":
+                omega = value
+            print(f"Received data from {device}: the rssi is: {value}")
+
         except json.JSONDecodeError:
             print("Received data is not valid JSON.")
 
@@ -37,9 +57,10 @@ async def start_tcp_server():
         await server.serve_forever()
 
 # FastAPI endpoint (optional)
-@app.get("/")
+@app.get("/rssis")
 async def read_root():
-    return {"message": "FastAPI TCP Server is running"}
+    global alpha, beta, omega
+    return {"alpha": alpha, "beta": beta, "omega": omega}
 
 # Run the TCP server alongside FastAPI
 @app.on_event("startup")

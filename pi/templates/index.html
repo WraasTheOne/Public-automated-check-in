@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSSI Monitor</title>
+    <script type="text/javascript">
+        // Establish a connection to the server for server-sent events (SSE)
+        const eventSource = new EventSource("/stream");
+        // Listen for messages from the server
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            document.getElementById("alpha").textContent = `Alpha: ${data.alpha}`;
+            document.getElementById("beta").textContent = `Beta: ${data.beta}`;
+            document.getElementById("omega").textContent = `Omega: ${data.omega}`;
+            document.getElementById("status").textContent = `Status: ${data.status}`;
+            if (data.status == false) {
+                //get the background color of the body
+                document.body.style.backgroundColor = "lightcoral";
+            } else {
+                document.body.style.backgroundColor = "lightgreen";
+            }
+        };
+    </script>
+</head>
+<body> 
+    <h1>Real-time RSSI Monitor</h1>
+    <h2 id="status">Status: Connecting...</h2>
+    <ul>
+        <li id="alpha">Alpha: Loading...</li>
+        <li id="beta">Beta: Loading...</li>
+        <li id="omega">Omega: Loading...</li>
+    </ul>
+    <form action="/submit" method="post">
+        <input type="checkbox" name="checkInd" value="inside">Indside/Outside - On/Off
+        <br>
+        <button style="margin-top: 10px;" type="submit">Submit</button>
+    </form>
+</body>
+</html>
+
