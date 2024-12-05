@@ -5,12 +5,15 @@ services:
     image: mysql:8.0
     container_name: userdb
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: userdb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: userpassword
+      MYSQL_ROOT_PASSWORD: rootpassword  # Set the root user's password
+      MYSQL_DATABASE: userdb             # Name of the default database
+      MYSQL_USER: appuser                # Name of a regular user
+      MYSQL_PASSWORD: appuserpassword    # Password for the regular user
     ports:
-      - "3306:3306"
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       internal_net:
         aliases:
@@ -29,3 +32,6 @@ services:
 networks:
   internal_net:
     driver: bridge
+
+volumes:
+  mysql-data:
