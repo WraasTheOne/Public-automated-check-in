@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"fmt"
@@ -9,29 +9,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main() {
-
-	port := loadEnv()
-
-	listener := startServer(port)
-
-	defer listener.Close()
-
-}
-
-func loadEnv() string {
+func LoadEnv(variable string) string {
 	err := godotenv.Load("../configs/.env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
-	port := os.Getenv("SERVER_PORT")
+	port := os.Getenv(variable)
 	if port == "" {
 		log.Fatal("SERVER_PORT is not set in the environment")
 	}
 	return port
 }
 
-func startServer(port string) net.Listener {
+func StartServer(port string) net.Listener {
 	fmt.Println("Starting server on port " + port)
 	listener, err := net.Listen("tcp", port)
 	if err != nil {

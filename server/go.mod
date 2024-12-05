@@ -1,4 +1,4 @@
-module checker/vehicle
+module Public-automated-check-in/server
 
 go 1.23.3
 
