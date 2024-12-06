@@ -44,9 +44,6 @@ func CreateSession(userID int64) (*Session, error) {
 	// Generate a unique token (e.g., UUID or random string)
 	token := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d:%d", userID, time.Now().UnixNano()))))
 
-	// Store the session in Redis or a database (not implemented here)
-	// Example: redisClient.Set(token, userID, time.Hour)
-
 	return &Session{
 		Token:  token,
 		UserID: userID,
