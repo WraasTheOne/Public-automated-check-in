@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"Public-automated-check-in/server/internal/db"
+	"Public-automated-check-in/server/internal/redisdb"
 	"Public-automated-check-in/server/pkg/hash"
 	"Public-automated-check-in/server/pkg/util"
 	"Public-automated-check-in/server/proto"
@@ -55,6 +56,11 @@ func (s *LoginService) Login(ctx context.Context, req *proto.LoginRequest) (*pro
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %v", err)
 	}
+
+	redisdb.InitRedis()
+	redisdb.SetWithExpiration(session.Token, id, 3600)
+	fmt.Println("im here")
+	defer redisdb.CloseRedis()
 
 	// Return a successful response with the session token
 	return &proto.LoginResponse{

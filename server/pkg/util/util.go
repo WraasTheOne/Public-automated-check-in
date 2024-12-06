@@ -61,3 +61,10 @@ func GetDbEnvs() (string, string, string, string, string) {
 	var dbname = LoadEnv("USERDB_DBNAME")
 	return usernamedb, passworddb, hostdb, portdb, dbname
 }
+
+func GetRedisEnvs() (string, string, string) {
+	var host = LoadEnv("REDIS_HOST")
+	var port = LoadEnv("REDIS_PORT")
+	var password = LoadEnv("REDIS_PASSWORD")
+	return host, port, password
+}
