@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS trips (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    start_location VARCHAR(255) NOT NULL,
+    end_location VARCHAR(255) NOT NULL,
+    trip_date DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS bluetooth_devices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    device_id VARCHAR(255) NOT NULL UNIQUE,
+    device_name VARCHAR(255),
+    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
