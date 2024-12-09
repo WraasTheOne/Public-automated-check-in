@@ -18,20 +18,25 @@ func (s *AuthClientService) Login(ctx context.Context, req *proto.AuthClientRequ
 
 	if token == "" {
 		return &proto.AuthClientResponse{
-			Message: "Invalid token",
-		}, nil
+			AuthStatus: false,
+			Message:    "Invalid token",
+		}, fmt.Errorf("no token provided")
 	}
 
 	// Initialize Redis client
 	if err := redisdb.InitRedis(); err != nil {
-		return nil, fmt.Errorf("failed to connect to Redis: %v", err)
+		return &proto.AuthClientResponse{
+			AuthStatus: false,
+			Message:    "Invalid token",
+		}, fmt.Errorf("failed to connect to Redis: %v", err)
 	}
 
 	// Check if the token exists in Redis
 	var authStatus = redisdb.CheckToken(token)
 	if !authStatus {
 		return &proto.AuthClientResponse{
-			Message: "Invalid token",
+			AuthStatus: false,
+			Message:    "Invalid token",
 		}, nil
 	}
 
