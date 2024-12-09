@@ -26,6 +26,12 @@ func (s *LoginService) Login(ctx context.Context, req *proto.LoginRequest) (*pro
 	username := req.GetUsername()
 	incpassword := req.GetPassword()
 
+	if username == "" || incpassword == "" {
+		return &proto.LoginResponse{
+			Message: "Invalid username or password",
+		}, nil
+	}
+
 	// Initialize database connection
 	if err := db.InitDB(usernamedb, passworddb, hostdb, portdb, dbname); err != nil {
 		fmt.Print(err)
