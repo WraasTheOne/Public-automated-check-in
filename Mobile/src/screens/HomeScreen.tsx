@@ -18,10 +18,7 @@ import useBle from '../util/BleScan';
 const HomeScreen: React.FC = () => {
 	const {
 		startScan,
-		alldevices,
 		disconnectAllDevices,
-		verifyiedList,
-		correntDevice,
 		isCheakdIn
 
 	} = useBle();
@@ -31,6 +28,26 @@ const HomeScreen: React.FC = () => {
 	const [colorChange, setColorChange] = useState("lightblue");
 
 	useEffect(() => {
+
+		//check if the user is checked in BackIsCheakdIn
+		//await AsyncStorage.getItem("BackIsCheakdIn").then((value) => {
+		//	if (value) {
+		//		setJournStatus(true);
+		//	}
+		//});
+		const checkIfCheakdIn = async () => {
+			const value = await AsyncStorage.getItem("BackIsCheakdIn");
+			if (value) {
+				setJournStatus(true);
+				setColorChange("lightgreen");
+				await AsyncStorage.removeItem("BackIsCheakdIn");
+			}
+			else {
+				console.log("No value");
+			}
+		}
+		checkIfCheakdIn();
+
 		if (isCheakdIn) {
 			setJournStatus(true);
 			setColorChange("lightgreen");
@@ -42,15 +59,16 @@ const HomeScreen: React.FC = () => {
 	}, [isCheakdIn]);
 
 	useEffect(() => {
-		const starTtime = setTimeout(() => {
+		const interval = setInterval(() => {
 			if (!isCheakdIn) {
 				startScan();
 			}
-		}, 10000);
+		}, 10000);  // Set the interval to 10 seconds (10000 milliseconds)
 
-		return () => { clearTimeout(starTtime); }
-	}, [isCheakdIn]);
-
+		return () => {
+			clearInterval(interval);  // Clear the interval when the component unmounts or the dependencies change
+		};
+	}, [isCheakdIn]);  // The effect runs when `isCheakdIn` changes
 
 	const handelStartJourney = () => {
 		startScan();

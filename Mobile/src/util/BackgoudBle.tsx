@@ -10,10 +10,41 @@ const bleManager = new BleManager();
 
 // Function to start BLE scanning and connect to devices
 const discoveredDevices: Device[] = [];
+const verifiedDevices: Device[] = [];
+
+
+const checkIfstillConnected = async (device: Device): Promise<boolean> => {
+	try {
+		const isConnected = await device.isConnected();
+		return isConnected;
+	} catch (error) {
+		console.error("Error checking connection status:", error);
+		return false;
+	}
+}
+
+
 export const startBleScanAndConnect = async (): Promise<Device[]> => {
 	try {
+		if (verifiedDevices.length > 0) {
+			const mappedDevices = verifiedDevices.map(async (device) => {
+				const isConnected = await checkIfstillConnected(device);
+				if (!isConnected) {
+					console.log("Device disconnected:", device.id);
+					return null;
+				}
+				if (verifiedDevices.includes(device)) {
+					return null;
+				}
+				return device;
+			});
+			if (mappedDevices.length > 0) {
+				const connectedDevices = await Promise.all(mappedDevices);
+				verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
+				return verifiedDevices;
+			}
+		}
 		console.log("Starting BLE scan...");
-
 
 		let coutOfDevices = 0;
 		await new Promise<void>((resolve) => {
@@ -44,7 +75,6 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 
 		console.log("Discovered devices:", discoveredDevices);
 
-		// Connect to devices
 		const connectedDevices = await Promise.all(
 			discoveredDevices.map(async (device): Promise<Device | null> => {
 				try {
@@ -70,9 +100,10 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 		);
 
 		// Filter verified devices
-		const verifiedDevices = connectedDevices.filter(
-			(dev): dev is Device => dev !== null
-		);
+		//const verifiedDevices = connectedDevices.filter(
+		//	(dev): dev is Device => dev !== null
+		//);
+		verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
 		console.log("Verified devices:", verifiedDevices);
 
 		// Save verified devices to AsyncStorage

@@ -5,6 +5,8 @@ import * as TaskManager from 'expo-task-manager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { startBleScanAndConnect } from './BackgoudBle';
+import { getRssiFromDevises } from './BleRssi';
+
 
 const BACKGROUND_FETCH_TASK = 'BACKGROUND_FETCH_TASK';
 
@@ -18,8 +20,8 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 		console.log('User token:', userToken);
 
 		const devices = await startBleScanAndConnect();
-
-		console.log('Connected devices:', devices);
+		console.log('Connected devices:');
+		getRssiFromDevises(devices);
 
 		// Return success
 		return BackgroundFetch.BackgroundFetchResult.NewData;

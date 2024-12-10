@@ -9,12 +9,6 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@improbable-eng/grpc-web": "^0.15.0",
-    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
-    "@mitch528/react-native-grpc": "^0.1.10",
-    "@protobuf-ts/plugin": "^2.9.4",
-    "@protobuf-ts/runtime": "^2.9.4",
-    "@protobuf-ts/runtime-rpc": "^2.9.4",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/cli": "latest",
     "@react-navigation/native": "^7.0.13",
@@ -28,8 +22,6 @@
     "expo-secure-store": "~14.0.0",
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.5",
-    "google-protobuf": "^3.21.4",
-    "grpc-web": "^1.5.0",
     "react": "18.3.1",
     "react-native": "0.76.3",
     "react-native-base64": "^0.2.1",

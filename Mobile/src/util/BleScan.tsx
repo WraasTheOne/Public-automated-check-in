@@ -17,20 +17,17 @@ interface BlueToothLowEnergy {
 	disconnectAllDevices(): void;
 	alldevices: Device[];
 	verifyiedList: Device[];
-	correntDevice: Device | null;
 	isCheakdIn: boolean;
 }
 
 function useBle(): BlueToothLowEnergy {
 	const bleManager = useMemo(() => new BleManager(), []);
-	const [correntDevice, setCorrentDevice] = useState<Device | null>(null);
 
 	const [isCheakdIn, setIsCheakdIn] = useState(false);
 
 	const [alldevices, setAllDevices] = useState<Device[]>([]);
 	const [isScanning, setIsScanning] = useState(false);
 	const [verifyiedList, setVerifiedList] = useState<Device[]>([]);
-	const [isVerified, setIsVerified] = useState(false);
 
 	//disconnect all divices
 	const disconnectAllDevices = async () => {
@@ -116,6 +113,7 @@ function useBle(): BlueToothLowEnergy {
 
 	const disconnectDevice = async (device: Device) => {
 		try {
+			console.log("Disconnecting device:", device.id);
 			await device.cancelConnection();
 			setVerifiedList((prevDevices) =>
 				prevDevices.filter((d) => d.id !== device.id)
@@ -129,45 +127,46 @@ function useBle(): BlueToothLowEnergy {
 		if (verifyiedList.length === 0) {
 			return;
 		}
-		console.log("Starting RSSI monitoring interval...");
 
+		console.log("Starting RSSI monitoring interval...");
 		const intervalId = setInterval(async () => {
 			console.log("Checking RSSI for connected devices...");
-			let highestRssi: number = -100;
+			let highestRssi = -100;
+			let tempList = [...verifyiedList]; // Make a copy of the list to modify
+
 			for (const verifiedEsp of verifyiedList) {
 				try {
 					const updatedDevice = await verifiedEsp.readRSSI();
-					//reaber rssi can be null..
 					if (updatedDevice.rssi === null) {
 						console.error("RSSI is null for device:", verifiedEsp.name);
 						continue;
 					}
 					if (updatedDevice.rssi > highestRssi) {
 						highestRssi = updatedDevice.rssi;
-						console.log("Highest RSSI:", highestRssi);
 					}
-					console.log("cheack in status:", isCheakdIn);
-					console.log(
-						"RSSI:",
-						updatedDevice.rssi
-					);
+					console.log("RSSI:", updatedDevice.rssi);
 				} catch (error) {
-					console.error("Error reading RSSI from device:", verifiedEsp.id, error);
-					disconnectDevice(verifiedEsp);
-
+					console.log("REMOING divces", verifiedEsp.id, error);
+					tempList = tempList.filter(device => device.id !== verifiedEsp.id);
 				}
 			}
+
 			if (highestRssi > -50) {
 				setIsCheakdIn(true);
 			} else {
 				setIsCheakdIn(false);
+			}
+
+			if (tempList.length !== verifyiedList.length) {
+				setVerifiedList(tempList);
 			}
 		}, 2000);
 
 		return () => {
 			console.log("Clearing RSSI monitoring interval...");
 			clearInterval(intervalId);
-		}
+		};
+
 	}, [verifyiedList]);
 
 	return {
@@ -175,7 +174,6 @@ function useBle(): BlueToothLowEnergy {
 		alldevices,
 		disconnectAllDevices,
 		verifyiedList,
-		correntDevice,
 		isCheakdIn,
 	};
 }
