@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BleManager, Device } from 'react-native-ble-plx';
 
-
 interface bleServerInteractions {
 	getToken: () => Promise<string>;
 	sendResponeToken: (token: string) => Promise<boolean>;

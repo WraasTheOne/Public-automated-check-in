@@ -3,12 +3,15 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type AuthContextType = {
+	isReadyForBleScan: boolean;
 	isLoggedIn: boolean;
 	signIn: (token: string) => void;
 	signOut: () => void;
 };
 
+//        NOTE:     thies vlaues are esentially 
 export const AuthContext = createContext<AuthContextType>({
+	isReadyForBleScan: false,
 	isLoggedIn: false,
 	signIn: () => { },
 	signOut: () => { },
@@ -19,8 +22,8 @@ type Props = {
 };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
+	const [isReadyForBleScan, setIsReadyForBleScan] = useState<boolean>(false);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
 
 	useEffect(() => {
 		const checkLoginStatus = async () => {
@@ -29,8 +32,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 				setIsLoggedIn(!!token);
 			} catch (e) {
 				console.error('Failed to load token');
-			} finally {
-				setIsLoading(false);
 			}
 		};
 
@@ -55,13 +56,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 		}
 	};
 
-	if (isLoading) {
-		// You can return a splash screen or loader here
-		return null;
-	}
 
 	return (
-		<AuthContext.Provider value={{ isLoggedIn, signIn, signOut }}>
+		<AuthContext.Provider value={{ isLoggedIn, signIn, signOut, isReadyForBleScan }}>
 			{children}
 		</AuthContext.Provider>
 	);

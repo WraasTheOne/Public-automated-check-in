@@ -9,8 +9,15 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@improbable-eng/grpc-web": "^0.15.0",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
+    "@mitch528/react-native-grpc": "^0.1.10",
+    "@protobuf-ts/plugin": "^2.9.4",
+    "@protobuf-ts/runtime": "^2.9.4",
+    "@protobuf-ts/runtime-rpc": "^2.9.4",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/cli": "latest",
     "@react-navigation/native": "^7.0.13",
-	"@react-native-community/cli": "latest",
     "@react-navigation/native-stack": "^7.1.14",
     "@react-navigation/stack": "^7.0.18",
     "base-64": "^1.0.0",
@@ -21,6 +28,8 @@
     "expo-secure-store": "~14.0.0",
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.5",
+    "google-protobuf": "^3.21.4",
+    "grpc-web": "^1.5.0",
     "react": "18.3.1",
     "react-native": "0.76.3",
     "react-native-base64": "^0.2.1",
@@ -28,11 +37,16 @@
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.1.0",
     "react-navigation": "^5.0.0",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "ts-protoc-gen": "^0.15.0",
+    "react-dom": "18.3.1",
+    "react-native-web": "~0.19.13",
+    "@expo/metro-runtime": "~4.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/google-protobuf": "^3.15.12",
     "@types/react": "~18.3.12",
+    "protoc-gen-ts": "^0.8.7",
     "typescript": "^5.3.3"
   },
   "private": true

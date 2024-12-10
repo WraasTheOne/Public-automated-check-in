@@ -51,6 +51,7 @@ function useBle(): BlueToothLowEnergy {
 
 		setVerifiedList([]);
 		setAllDevices([]);
+		setIsCheakdIn(false);
 	};
 
 	const startScan = () => {
@@ -80,44 +81,6 @@ function useBle(): BlueToothLowEnergy {
 			setIsScanning(false);
 		}, 2000);
 	};
-
-	const [count, setCount] = useState(0);
-
-	//	useEffect(() => {
-	//		const checkTheDevices = async () => {
-	//
-	//			//craete a list of rssi taht will be sent to the server
-	//			const rssiList: number[] = [];
-	//			verifyiedList.forEach(async (verifiedEsp) => {
-	//				try {
-	//					console.log("Reading RSSI from device:", verifiedEsp);
-	//					const dviceRssi = await verifiedEsp.readRSSI();
-	//					if (dviceRssi.rssi) {
-	//						rssiList.push(dviceRssi.rssi);
-	//					}
-	//				} catch (error) {
-	//					console.error("Error reading RSSI:", error);
-	//				}
-	//			}
-	//			);
-	//			//TODO: send the rssi list to the server
-	//			console.log("list is sending to the server:", rssiList);
-	//		}
-	//
-	//		if (isVerified) {
-	//
-	//			const id = setInterval(() => {
-	//				console.log("Interval, count:", count);
-	//				checkTheDevices();
-	//				setCount((prev) => prev + 1);
-	//			}, 1000);
-	//
-	//			// Clean up function to clear the interval when the component unmounts.
-	//			return () => clearInterval(id);
-	//		}
-	//
-	//	}, [count, isVerified]);
-	//
 
 	useEffect(() => {
 		if (!isScanning && alldevices.length > 0) {
@@ -151,6 +114,17 @@ function useBle(): BlueToothLowEnergy {
 		}
 	}, [alldevices, isScanning, bleManager]);
 
+	const disconnectDevice = async (device: Device) => {
+		try {
+			await device.cancelConnection();
+			setVerifiedList((prevDevices) =>
+				prevDevices.filter((d) => d.id !== device.id)
+			);
+		} catch (error) {
+			console.error("Error disconnecting device:", device.id, error);
+		}
+	};
+
 	useEffect(() => {
 		if (verifyiedList.length === 0) {
 			return;
@@ -178,7 +152,9 @@ function useBle(): BlueToothLowEnergy {
 						updatedDevice.rssi
 					);
 				} catch (error) {
-					console.error("Error reading RSSI from device:", verifiedEsp.name, error);
+					console.error("Error reading RSSI from device:", verifiedEsp.id, error);
+					disconnectDevice(verifiedEsp);
+
 				}
 			}
 			if (highestRssi > -50) {
@@ -203,6 +179,5 @@ function useBle(): BlueToothLowEnergy {
 		isCheakdIn,
 	};
 }
-
 
 export default useBle;

@@ -10,12 +10,9 @@ import {
 	TouchableOpacity
 } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
-//import aler to alter user
 import { Alert } from 'react-native';
-
-
 import getRequiredPermissions from '../util/Promisitons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import useBle from '../util/BleScan';
 
 const HomeScreen: React.FC = () => {
@@ -30,36 +27,31 @@ const HomeScreen: React.FC = () => {
 	} = useBle();
 
 	const { signOut } = useContext(AuthContext);
-	const [isPromitting, setIsPromitting] = useState(false);
 	const [journStatus, setJournStatus] = useState(false);
 	const [colorChange, setColorChange] = useState("lightblue");
 
-
 	useEffect(() => {
 		if (isCheakdIn) {
+			setJournStatus(true);
 			setColorChange("lightgreen");
 		} else {
+			setJournStatus(false);
 			setColorChange("lightblue");
 		}
 
 	}, [isCheakdIn]);
 
-	const requestPermissions = async () => {
-		if (isPromitting) {
-			return;
-		}
+	useEffect(() => {
+		const starTtime = setTimeout(() => {
+			if (!isCheakdIn) {
+				startScan();
+			}
+		}, 10000);
 
-		const granted = await getRequiredPermissions();
-		console.log('granted', granted);
+		return () => { clearTimeout(starTtime); }
+	}, [isCheakdIn]);
 
-		if (granted) {
-			setIsPromitting(true);
-		}
-		else {
-			Alert.alert('Permission Denied', 'Please allow the required permissions to proceed do it in settings');
-		}
 
-	};
 	const handelStartJourney = () => {
 		startScan();
 		setJournStatus(true);
@@ -70,9 +62,14 @@ const HomeScreen: React.FC = () => {
 		setJournStatus(false);
 	}
 
-	requestPermissions();
+
 	return (
 		<View style={styles.container}>
+			<TouchableOpacity
+				style={{ position: 'absolute', right: 10, top: 10 }}
+				onPress={signOut} >
+				<Text> Logout </Text>
+			</TouchableOpacity>
 			{/* First Box */}
 			<View style={styles.containerRow}>
 				<Text style={styles.title}>Latest journeys:</Text>

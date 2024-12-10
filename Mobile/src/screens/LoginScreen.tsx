@@ -10,17 +10,15 @@ import {
 } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 
+
 const LoginScreen: React.FC = () => {
 	const { signIn } = useContext(AuthContext);
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 
 	const handleLogin = () => {
-		// Replace this with your actual authentication logic
 		if (username === 'user' && password === 'Pass') {
-			signIn('dummy-auth-token');
-		} else {
-			Alert.alert('Invalid Credentials', 'Username or password is incorrect.');
+			signIn('dommy-token');
 		}
 	};
 
