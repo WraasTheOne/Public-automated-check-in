@@ -38,7 +38,6 @@ func LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
 		return
 	}
-	defer db.CloseDB()
 
 	// Fetch user details
 	id, password, err := db.GetUser(username)
@@ -51,7 +50,9 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
+	defer db.CloseDB()
 	// Validate password
+
 	if !hash.ComparePasswords(password, incpassword) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username or password"})
 		return
