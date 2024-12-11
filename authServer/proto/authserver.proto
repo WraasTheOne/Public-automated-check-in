@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package login;
+option go_package = "Public-automated-check-in/authserver/proto;proto";
+
+service AuthService {
+  rpc AuthClient (AuthClientRequest) returns (AuthClientResponse);
+}
+
+message AuthClientRequest {
+  string token = 1;
+}
+
+message AuthClientResponse {
+   bool authStatus = 1;
+   string message = 2;
+}

@@ -1,27 +1,21 @@
 package main
 
 import (
+	"Public-automated-check-in/server/internal/services"
 	"log"
-	"net"
 
-	service "Public-automated-check-in/server/internal/services"
-	"Public-automated-check-in/server/proto"
-
-	"google.golang.org/grpc"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Start the gRPC server
-	listener, err := net.Listen("tcp", ":3001")
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
+	router := gin.Default()
 
-	grpcServer := grpc.NewServer()
-	proto.RegisterLoginServiceServer(grpcServer, &service.LoginService{})
+	// Define routes for login and register
+	router.POST("/login", services.LoginHandler)
+	router.POST("/register", services.RegisterHandler)
 
-	log.Println("gRPC server is running on port 3001")
-	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+	log.Println("Starting server on :8080...")
+	if err := router.Run(":8081"); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }

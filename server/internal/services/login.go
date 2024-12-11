@@ -1,112 +1,123 @@
-package service
+package services
 
 import (
-	"context"
-	"crypto/sha256"
-	"database/sql"
-	"fmt"
-	"strings"
-
 	"Public-automated-check-in/server/internal/db"
 	"Public-automated-check-in/server/internal/redisdb"
 	"Public-automated-check-in/server/pkg/hash"
 	"Public-automated-check-in/server/pkg/util"
-	"Public-automated-check-in/server/proto"
+	"crypto/sha256"
+	"database/sql"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
-type LoginService struct {
-	proto.UnimplementedLoginServiceServer
-}
+// LoginHandler handles the /login endpoint
+func LoginHandler(c *gin.Context) {
+	var req struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
 
-func (s *LoginService) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
+	// Bind JSON payload to request struct
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request payload"})
+		return
+	}
+
+	username := req.Username
+	incpassword := req.Password
+
 	// Load environment variables for database configuration
 	var usernamedb, passworddb, hostdb, portdb, dbname = util.GetDbEnvs()
-
-	// Retrieve incoming username and password from the request
-	username := req.GetUsername()
-	incpassword := req.GetPassword()
-
-	if username == "" || incpassword == "" {
-		return &proto.LoginResponse{
-			Message: "Invalid username or password",
-		}, nil
-	}
 
 	// Initialize database connection
 	if err := db.InitDB(usernamedb, passworddb, hostdb, portdb, dbname); err != nil {
-		fmt.Print(err)
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
+		return
 	}
-	// Fetch user details from the database using the provided username
 
+	// Fetch user details
 	id, password, err := db.GetUser(username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &proto.LoginResponse{
-				Message: "Invalid username or password",
-			}, nil
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username or password"})
+			return
 		}
-		return nil, fmt.Errorf("failed to fetch user from database: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch user from database"})
+		return
 	}
 
 	defer db.CloseDB()
+	// Validate password
 
-	if hash.ComparePasswords(password, incpassword) {
-		return &proto.LoginResponse{
-			Message: "Invalid username or password",
-		}, nil
+	if !hash.ComparePasswords(password, incpassword) {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username or password"})
+		return
 	}
 
-	// Create a new session for the user if authentication is successful
+	// Create a new session
 	session, err := util.CreateSession(id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create session"})
+		return
 	}
 
 	redisdb.InitRedis()
-	redisdb.SetWithExpiration(session.Token, id, 3600)
-	fmt.Println("im here")
 	defer redisdb.CloseRedis()
+	redisdb.SetWithExpiration(session.Token, id, 3600)
 
-	// Return a successful response with the session token
-	return &proto.LoginResponse{
-		Message: "Login successful",
-		Token:   session.Token,
-	}, nil
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   session.Token,
+	})
 }
 
-func (s *LoginService) Register(ctx context.Context, req *proto.RegisterRequest) (*proto.RegisterResponse, error) {
-	// Load environment variables for database configuration
-	var usernamedb, passworddb, hostdb, portdb, dbname = util.GetDbEnvs()
+// RegisterHandler handles the /register endpoint
+func RegisterHandler(c *gin.Context) {
+	var req struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
 
-	// Retrieve username and password from the request
-	username := req.GetUsername()
-	rawPassword := req.GetPassword()
+	// Bind JSON payload to request struct
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request payload"})
+		return
+	}
+
+	username := req.Username
+	rawPassword := req.Password
 
 	// Hash the password using SHA-256
 	hashedPassword := sha256.Sum256([]byte(rawPassword))
 	hashedPasswordStr := fmt.Sprintf("%x", hashedPassword)
 
+	// Load environment variables for database configuration
+	var usernamedb, passworddb, hostdb, portdb, dbname = util.GetDbEnvs()
+
 	// Initialize database connection
 	if err := db.InitDB(usernamedb, passworddb, hostdb, portdb, dbname); err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
+		return
 	}
+	defer db.CloseDB()
 
-	// Insert the user into the database
+	// Register the user
 	userID, err := db.RegisterUser(username, hashedPasswordStr)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			return &proto.RegisterResponse{
-				Message: "Username already exists",
-			}, nil
+			c.JSON(http.StatusConflict, gin.H{"message": "Username already exists"})
+			return
 		}
-		return nil, fmt.Errorf("failed to register user: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to register user"})
+		return
 	}
 
-	defer db.CloseDB() // Ensure the database connection is closed after the operation
-	// Return a successful response with the new user's ID
-	return &proto.RegisterResponse{
-		UserId:  fmt.Sprintf("%d", userID),
-		Message: "Registration successful",
-	}, nil
+	c.JSON(http.StatusOK, gin.H{
+		"userId":  userID,
+		"message": "Registration successful",
+	})
 }
