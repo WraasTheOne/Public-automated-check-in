@@ -41,7 +41,7 @@ func TrainModel(csvFilePath string, modelSavePath string) error {
 	fmt.Printf("Model accuracy: %.2f%%\n", accuracy*100)
 
 	// Save the model to disk
-	err = base.SerializeToFile(modelSavePath, rf)
+	err = base.SerializeToFile(rf, modelSavePath)
 	if err != nil {
 		return fmt.Errorf("failed to save model: %v", err)
 	}
@@ -51,7 +51,8 @@ func TrainModel(csvFilePath string, modelSavePath string) error {
 
 // LoadModel loads a previously saved model into a global variable
 func LoadModel(modelPath string) error {
-	loadedModel, err := base.Load(modelPath)
+	// Load the serialized model from the file
+	loadedModel, err := base.DeserializeFromFile(modelPath)
 	if err != nil {
 		return fmt.Errorf("failed to load model: %v", err)
 	}
@@ -73,16 +74,18 @@ func PredictVehicleStatus(rssi1, rssi2 float64, passengerCount int) (string, err
 		return "", fmt.Errorf("model is not loaded")
 	}
 
-	// Create a test instance
+	// Create a test instance with attributes
 	attributes := base.NewDenseInstances()
-	attributes.Extend(base.NewRealAttribute("RSSI1"))
-	attributes.Extend(base.NewRealAttribute("RSSI2"))
-	attributes.Extend(base.NewRealAttribute("PassengerCount"))
-	attributes.Extend(base.NewCategoricalAttribute("InOrNot", []string{"yes", "no"}))
-	attributes.AddClassAttribute(base.NewCategoricalAttribute("InOrNot", []string{"yes", "no"}))
+	attributes.AddAttribute(base.NewRealAttribute("RSSI1"))
+	attributes.AddAttribute(base.NewRealAttribute("RSSI2"))
+	attributes.AddAttribute(base.NewRealAttribute("PassengerCount"))
+	attributes.AddClassAttribute(base.NewCategoricalAttribute())
 
-	row := []float64{rssi1, rssi2, float64(passengerCount)}
-	instance := base.NewDenseInstance(attributes, row)
+	// Add a row of data
+	instance := base.NewDenseInstance(attributes)
+	instance.Set(0, rssi1)
+	instance.Set(1, rssi2)
+	instance.Set(2, float64(passengerCount))
 
 	// Predict using the loaded model
 	prediction, err := model.Predict(instance)
@@ -90,7 +93,7 @@ func PredictVehicleStatus(rssi1, rssi2 float64, passengerCount int) (string, err
 		return "", fmt.Errorf("failed to make prediction: %v", err)
 	}
 
-	if prediction.String() == "yes" {
+	if prediction[0] == "yes" {
 		return "yes", nil
 	}
 	return "no", nil
