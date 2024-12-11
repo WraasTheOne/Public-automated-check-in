@@ -5,6 +5,7 @@ import (
 	"Public-automated-check-in/machinelearning/internal/redisdb"
 	"Public-automated-check-in/machinelearning/proto"
 	"fmt"
+	"strconv"
 	"time"
 
 	"context"
@@ -48,7 +49,7 @@ func (s *MachineLearningService) Predict(ctx context.Context, req *proto.Predict
 	defer redisdb.CloseRedis()
 
 	// Step 4: Start loop to get info from Redis stream
-	token := req.GetToken() // Replace with dynamic token if needed
+	token := req.GetToken()
 	timeout := time.After(30 * time.Second)
 	reset := make(chan bool)
 	go func() {
@@ -86,7 +87,15 @@ func (s *MachineLearningService) Predict(ctx context.Context, req *proto.Predict
 			reset <- true
 
 			// Step 6: Get vehicle location
-			location, err := getVehicleLocation()
+			esp1ID, err := strconv.Atoi(values["ESP1ID"])
+			if err != nil {
+				return &proto.PredictResponse{
+					ServiceStatus: false,
+					Message:       fmt.Sprintf("Failed to convert ESP1ID to integer: %v", err),
+				}, nil
+			}
+
+			location, ammount_of_passengers, err := db.GetCurrentLocation(esp1ID)
 			if err != nil {
 				return &proto.PredictResponse{
 					ServiceStatus: false,
@@ -95,7 +104,7 @@ func (s *MachineLearningService) Predict(ctx context.Context, req *proto.Predict
 			}
 
 			// Step 7: Store trip data
-			err = storeTripData(tripID, location)
+			err = db.RegisterTripData(tripID, location)
 			if err != nil {
 				return &proto.PredictResponse{
 					ServiceStatus: false,

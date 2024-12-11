@@ -22,9 +22,17 @@ CREATE TABLE IF NOT EXISTS trip_data (
     FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS vehicles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_name VARCHAR(255),
+    current_location VARCHAR(255),
+    ammount_of_passengers INT DEFAULT 0,
+    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS bluetooth_devices (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    device_id VARCHAR(255) NOT NULL UNIQUE,
+    vehicle_id INT NOT NULL,
     device_name VARCHAR(255),
-    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
