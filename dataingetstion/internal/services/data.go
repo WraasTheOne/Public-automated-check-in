@@ -12,9 +12,10 @@ import (
 )
 
 type DataRequest struct {
-	ID        string `json:"id"`
-	Payload   string `json:"payload"`
-	Timestamp int64  `json:"timestamp"`
+	ESP1ID int64  `json:"ESP1ID"`
+	ESP2ID int64  `json:"ESP2ID"`
+	RSSI1  string `json:"RSSI1"`
+	RSSI2  string `json:"RSSI2"`
 }
 
 // WebSocket Upgrader
@@ -32,6 +33,19 @@ func WebSocketHandler(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		c.Abort()
+		return
+	}
+
+	err = redisdb.InitRedis()
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis: %v", err)
+	}
+	defer redisdb.CloseRedis()
 
 	log.Println("WebSocket connection established")
 
@@ -53,20 +67,27 @@ func WebSocketHandler(c *gin.Context) {
 
 		// Prepare data for Redis stream
 		data := map[string]interface{}{
-			"id":        dataReq.ID,
-			"payload":   dataReq.Payload,
-			"timestamp": dataReq.Timestamp,
+			"esp1id": dataReq.ESP1ID,
+			"rssi1":  dataReq.RSSI1,
+			"esp2id": dataReq.ESP1ID,
+			"rssi2":  dataReq.RSSI1,
+		}
+
+		if dataReq.ESP1ID == 0 || dataReq.ESP2ID == 0 || dataReq.RSSI1 == "" || dataReq.RSSI2 == "" {
+			log.Printf("Invalid data: %v", dataReq)
+			conn.WriteMessage(websocket.TextMessage, []byte("Invalid data"))
+			continue
 		}
 
 		// Add data to Redis stream
-		err = redisdb.AddToStream("data_stream", data)
+		err = redisdb.AddToStream(token, data)
 		if err != nil {
 			log.Printf("Failed to add data to Redis stream: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte("Failed to ingest data"))
 			continue
 		}
 
-		log.Printf("Data ingested: ID=%s, Payload=%s", dataReq.ID, dataReq.Payload)
+		log.Printf("Data ingested: %v", data)
 		conn.WriteMessage(websocket.TextMessage, []byte("Data ingested successfully"))
 	}
 }
