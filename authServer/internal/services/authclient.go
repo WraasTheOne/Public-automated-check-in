@@ -12,7 +12,7 @@ type AuthClientService struct {
 	proto.UnimplementedAuthServiceServer
 }
 
-func (s *AuthClientService) Login(ctx context.Context, req *proto.AuthClientRequest) (*proto.AuthClientResponse, error) {
+func (s *AuthClientService) AuthClient(ctx context.Context, req *proto.AuthClientRequest) (*proto.AuthClientResponse, error) {
 
 	token := req.GetToken()
 
