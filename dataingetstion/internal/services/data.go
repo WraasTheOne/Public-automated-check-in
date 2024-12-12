@@ -36,8 +36,7 @@ func WebSocketHandler(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	// token := c.GetHeader("Authorization")
-	var token = "hei"
+	token := c.GetHeader("Authorization")
 	if token == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
 		c.Abort()

@@ -61,6 +61,7 @@ class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServ
         finally:
             # Ensure resources are cleaned up
             self.db.close()
+            
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
