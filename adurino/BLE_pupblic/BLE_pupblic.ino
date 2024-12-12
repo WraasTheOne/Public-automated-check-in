@@ -1,0 +1,96 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+
+String hashMsg(char *payload);
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
+static BLECharacteristic *pCharacteristic;
+static String currentToken = "Invailed";
+
+// Callback class for server (optional, handles connections/disconnections)
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
+    BLEAddress connectedDevice(param->connect.remote_bda);
+    Serial.println("Device connected: " + connectedDevice.toString());
+    BLEDevice::startAdvertising();
+  }
+
+  void onDisconnect(BLEServer *pServer) {
+    Serial.println("Device disconnected");
+    BLEDevice::startAdvertising();
+  }
+};
+
+// Callback class for characteristic reads and writes
+class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pChar) {
+    String incomingValue = pChar->getValue();
+
+    if (incomingValue.length() > 0) {
+      Serial.print("Received msg from app <- and form <- server : ");
+      Serial.println(incomingValue.c_str());
+
+       String newToken = hashMsg((char*) incomingValue.c_str());
+      if (newToken != "ERROR") {
+        Serial.println("DET VIKER");
+        Serial.println(newToken);
+          pCharacteristic->setValue(newToken);
+      } else {
+        Serial.println("DER ER ERROR");
+          pCharacteristic->setValue("NULL_ERROR");
+      }
+      // Update the characteristic value so that when the app reads again, it gets the updated token
+      pChar->setValue(newToken);
+    }
+  }
+  void onRead(BLECharacteristic *pChar) {
+    // The read callback is optional in this scenario, but if you want to handle reads explicitly:
+    // This will be called whenever the app reads the characteristic.
+    Serial.println("App is reading the characteristic");
+  }
+};
+
+void setup() {
+  Serial.begin(115200);
+
+  char *test = "this is sander test";
+  String getHash = hashMsg(test);
+  if (getHash != "ERROR") {
+    Serial.println("DET VIKER");
+    Serial.println(getHash);
+  } else {
+    Serial.println("DER ER ERROR");
+  }
+
+  Serial.println("Starting BLE...");
+  BLEDevice::init("ESP32-3333");//dette er ble navenet
+
+  BLEServer *pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  pCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID,
+    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY );
+  pCharacteristic->setValue(currentToken);
+
+  pCharacteristic->setCallbacks(new MyCharacteristicCallbacks());
+  pService->start();
+
+  // Start advertising
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(true);
+  pAdvertising->setMinPreferred(0x06);  // optional
+  pAdvertising->setMinPreferred(0x12);  // optional
+  BLEDevice::startAdvertising();
+  Serial.println("BLE service started. Waiting for connections...");
+}
+
+void notyfiyTheHash(String hash) {
+}
+
+void loop() {
+  delay(2000);
+}

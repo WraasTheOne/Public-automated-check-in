@@ -10,6 +10,9 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+node_modules/
+android/
+.expo/
 build/
 develop-eggs/
 dist/

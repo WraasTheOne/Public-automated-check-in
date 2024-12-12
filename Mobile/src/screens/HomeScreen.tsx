@@ -29,12 +29,6 @@ const HomeScreen: React.FC = () => {
 
 	useEffect(() => {
 
-		//check if the user is checked in BackIsCheakdIn
-		//await AsyncStorage.getItem("BackIsCheakdIn").then((value) => {
-		//	if (value) {
-		//		setJournStatus(true);
-		//	}
-		//});
 		const checkIfCheakdIn = async () => {
 			const value = await AsyncStorage.getItem("BackIsCheakdIn");
 			if (value) {
@@ -59,16 +53,17 @@ const HomeScreen: React.FC = () => {
 	}, [isCheakdIn]);
 
 	useEffect(() => {
-		const interval = setInterval(() => {
-			if (!isCheakdIn) {
-				startScan();
-			}
-		}, 10000);  // Set the interval to 10 seconds (10000 milliseconds)
+		startScan();
+		//const interval = setInterval(() => {
 
-		return () => {
-			clearInterval(interval);  // Clear the interval when the component unmounts or the dependencies change
-		};
-	}, [isCheakdIn]);  // The effect runs when `isCheakdIn` changes
+		//	if (!isCheakdIn) {
+		//	}
+		//}, 10000);  // Set the interval to 10 seconds (10000 milliseconds)
+
+		//return () => {
+		//	clearInterval(interval);  // Clear the interval when the component unmounts or the dependencies change
+		//};
+	}, []);  // The effect runs when `isCheakdIn` changes
 
 	const handelStartJourney = () => {
 		startScan();

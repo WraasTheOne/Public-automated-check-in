@@ -1,15 +1,16 @@
 import { useEffect } from "react";
 import { useMemo, useState } from "react";
-import { PermissionsAndroid, Platform } from "react-native";
 import {
-	BleError,
 	BleManager,
-	Characteristic,
 	Device,
 } from "react-native-ble-plx";
 
 import serverInterations from "./interactions/serverInterations";
 import espInteractions from "./interactions/BleInterations";
+import { connectToEspAndverify } from "./interactions/connectToEspAndverify";
+import { getRssiFromDevises } from "./BleRssi";
+
+
 
 import * as ExpoDevice from "expo-device";
 interface BlueToothLowEnergy {
@@ -52,120 +53,62 @@ function useBle(): BlueToothLowEnergy {
 	};
 
 	const startScan = () => {
-		setAllDevices([]);
 		setIsScanning(true);
-
+		setAllDevices([]);
 		bleManager.startDeviceScan(null, null, (error, device) => {
 			if (error) {
 				console.error("Error during scan:", error);
 				return;
 			}
-
-			console.log("Starting BLE scan...");
 			if (device?.name && device.name.startsWith("ESP32")) {
 				setAllDevices((prevDevices) => {
 					if (!prevDevices.some((d) => d.id === device.id)) {
-						return [...prevDevices, device];
+						if (!verifyiedList.some((d) => d.id === device.id)) {
+							return [...prevDevices, device];
+						} else {
+							console.log("ahhaha taht waht one of the devices");
+						}
+
 					}
 					return prevDevices;
 				});
 			}
 		});
-		// Stop scanning after 10 seconds
 		setTimeout(() => {
 			console.log("Stopping scan...");
 			bleManager.stopDeviceScan();
 			setIsScanning(false);
-		}, 2000);
+		}, 3000);
 	};
 
 	useEffect(() => {
 		if (!isScanning && alldevices.length > 0) {
-			const connectDevices = async () => {
-				const connections = alldevices.map(async (device) => {
-					try {
-						console.log("Connecting to device:", device.id);
-						const espInteract = espInteractions(bleManager, device);
-						const getToken = await serverInterations().getToken();
-						const connectedDevice = await espInteract.sendToken(getToken);
-						const token = await espInteract.receiveToken();
-						// TODO:			if the token
-						//					is not that  the correct token skip the device
-						console.log("Token received:", token);
-						return connectedDevice;
-					} catch (error) {
-						console.error("Error connecting to device:", error);
-						return null;
-					}
-				});
-
-				const connectedDevices = await Promise.all(connections);
-				setVerifiedList((prevDevices) => [
-					...prevDevices,
-					...connectedDevices.filter((dev) => dev !== null),
-				]);
-			};
-
-			connectDevices();
+			console.log("Connecting to devices and verifying...", verifyiedList);
+			const connectAndVerify = async () => {
+				const verifiedDevices = await connectToEspAndverify(bleManager, alldevices);
+				if (verifiedDevices === null) {
+					return;
+				}
+				console.log("Verified devices:", verifiedDevices.length);
+				setVerifiedList(verifiedDevices);
+			}
+			connectAndVerify();
 			setAllDevices([]); // Clear the device list after attempting connections
 		}
 	}, [alldevices, isScanning, bleManager]);
 
-	const disconnectDevice = async (device: Device) => {
-		try {
-			console.log("Disconnecting device:", device.id);
-			await device.cancelConnection();
-			setVerifiedList((prevDevices) =>
-				prevDevices.filter((d) => d.id !== device.id)
-			);
-		} catch (error) {
-			console.error("Error disconnecting device:", device.id, error);
-		}
-	};
-
 	useEffect(() => {
+
 		if (verifyiedList.length === 0) {
 			return;
 		}
 
-		console.log("Starting RSSI monitoring interval...");
 		const intervalId = setInterval(async () => {
-			console.log("Checking RSSI for connected devices...");
-			let highestRssi = -100;
-			let tempList = [...verifyiedList]; // Make a copy of the list to modify
-
-			for (const verifiedEsp of verifyiedList) {
-				try {
-					const updatedDevice = await verifiedEsp.readRSSI();
-					if (updatedDevice.rssi === null) {
-						console.error("RSSI is null for device:", verifiedEsp.name);
-						continue;
-					}
-					if (updatedDevice.rssi > highestRssi) {
-						highestRssi = updatedDevice.rssi;
-					}
-					console.log("RSSI:", updatedDevice.rssi);
-				} catch (error) {
-					console.log("REMOING divces", verifiedEsp.id, error);
-					tempList = tempList.filter(device => device.id !== verifiedEsp.id);
-				}
-			}
-
-			if (highestRssi > -50) {
-				setIsCheakdIn(true);
-			} else {
-				setIsCheakdIn(false);
-			}
-
-			if (tempList.length !== verifyiedList.length) {
-				setVerifiedList(tempList);
-			}
+			await getRssiFromDevises(verifyiedList);
+			console.log("RSSIs:");
 		}, 2000);
 
-		return () => {
-			console.log("Clearing RSSI monitoring interval...");
-			clearInterval(intervalId);
-		};
+		return () => { console.log("Clearing RSSI monitoring interval..."); clearInterval(intervalId); };
 
 	}, [verifyiedList]);
 

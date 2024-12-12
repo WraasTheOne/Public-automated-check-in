@@ -26,7 +26,9 @@ const checkIfstillConnected = async (device: Device): Promise<boolean> => {
 
 export const startBleScanAndConnect = async (): Promise<Device[]> => {
 	try {
-		if (verifiedDevices.length > 0) {
+		//fist we are instrested to see if the device is still connected with at least 1 devices
+		//to se if the device is still connected
+		if (verifiedDevices.length > 1) {
 			const mappedDevices = verifiedDevices.map(async (device) => {
 				const isConnected = await checkIfstillConnected(device);
 				if (!isConnected) {
@@ -38,7 +40,7 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 				}
 				return device;
 			});
-			if (mappedDevices.length > 0) {
+			if (mappedDevices.length > 1) {
 				const connectedDevices = await Promise.all(mappedDevices);
 				verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
 				return verifiedDevices;
@@ -59,7 +61,7 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 					console.log("we found a device", device.name);
 					coutOfDevices++;
 				}
-				if (coutOfDevices > 10) {
+				if (coutOfDevices > 20) {
 					bleManager.stopDeviceScan();
 					resolve();
 				}
@@ -87,7 +89,6 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 					const token = await espInteract.receiveToken();
 
 					//TODO:              to see if the token is valid :) 😆
-
 					console.log("Token received:", token);
 
 					// Return connected device if successful
@@ -99,16 +100,8 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 			})
 		);
 
-		// Filter verified devices
-		//const verifiedDevices = connectedDevices.filter(
-		//	(dev): dev is Device => dev !== null
-		//);
+		// Filter verified devices and add to the list
 		verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
-		console.log("Verified devices:", verifiedDevices);
-
-		// Save verified devices to AsyncStorage
-		await AsyncStorage.setItem("verifiedDevices", JSON.stringify(verifiedDevices));
-
 		return verifiedDevices;
 	} catch (error) {
 		console.error("Error in BLE scan and connect:", error);

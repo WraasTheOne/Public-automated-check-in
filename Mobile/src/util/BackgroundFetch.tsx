@@ -16,13 +16,11 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 	try {
 		console.log('Background fetch task executed');
 
-		const userToken = await AsyncStorage.getItem('userToken');
-		console.log('User token:', userToken);
-
-		const devices = await startBleScanAndConnect();
+		//const devices = await startBleScanAndConnect();
+		if (devices.length > 1) {
+			getRssiFromDevises(devices);
+		}
 		console.log('Connected devices:');
-		getRssiFromDevises(devices);
-
 		// Return success
 		return BackgroundFetch.BackgroundFetchResult.NewData;
 	} catch (error) {

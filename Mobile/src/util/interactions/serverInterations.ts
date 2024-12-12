@@ -14,7 +14,7 @@ function server(): bleServerInteractions {
 	}
 
 	const sendResponeToken = async (token: string) => {
-		if (token === "esp_token") {
+		if (!!token) {
 			return true;
 		}
 		return false;

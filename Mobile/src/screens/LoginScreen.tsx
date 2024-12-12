@@ -10,33 +10,6 @@ import {
 } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 
-//reqture a user like:
-//func RegisterHandler(c *gin.Context) {
-//	var req struct {
-//		Username string `json:"username" binding:"required"`
-//		Password string `json:"password" binding:"required"`
-//	}
-
-//const regutereTheFirstUser = async () => {
-//	const response = await fetch('http://192.168.1.68:8080/register', {
-//		method: 'POST',
-//		headers: {
-//			'Content-Type': 'application/json'
-//		},
-//		body: JSON.stringify({
-//			username: 'user',
-//			password: 'Pass'
-//		})
-//	});
-//	return response.json();
-//}
-//
-//regutereTheFirstUser().then(() => {
-//	console.log('First user registered');
-//}).catch((e) => {
-//	console.error('Failed to register first user', e);
-//});
-
 const login = async (username: string, password: string) => {
 	const response = await fetch('http://192.168.1.68:8080/login', {
 		method: 'POST',
@@ -56,7 +29,6 @@ const login = async (username: string, password: string) => {
 };
 
 
-
 const LoginScreen: React.FC = () => {
 	const { signIn } = useContext(AuthContext);
 	const [username, setUsername] = useState('');
@@ -64,8 +36,10 @@ const LoginScreen: React.FC = () => {
 
 	const handleLogin = async () => {  // Making handleLogin an async function
 		try {
-			const token = await login(username, password);  // Awaiting the login function
-			signIn(token);  // Using the token to sign in
+			login(username, password)
+				.then((token) => {
+					signIn(token);
+				})
 		} catch (e) {
 			Alert.alert('Woring Please try again');
 		}
