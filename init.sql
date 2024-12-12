@@ -34,6 +34,6 @@ CREATE TABLE IF NOT EXISTS bluetooth_devices (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_id INT NOT NULL,
     device_name VARCHAR(255),
-    secret VARCHAR(255),
+    secret_key VARCHAR(255),
     FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
