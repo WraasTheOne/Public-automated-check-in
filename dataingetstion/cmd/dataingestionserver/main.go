@@ -2,7 +2,6 @@ package main
 
 import (
 	"Public-automated-check-in/dataingestion/internal/auth"
-	"Public-automated-check-in/dataingestion/internal/redisdb"
 	"Public-automated-check-in/dataingestion/internal/services"
 	"log"
 
@@ -10,12 +9,6 @@ import (
 )
 
 func main() {
-	// Initialize Redis
-	err := redisdb.InitRedis()
-	if err != nil {
-		log.Fatalf("Failed to initialize Redis: %v", err)
-	}
-	defer redisdb.CloseRedis()
 
 	// Setup Gin server
 	router := gin.Default()

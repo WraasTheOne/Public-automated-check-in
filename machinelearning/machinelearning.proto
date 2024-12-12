@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package machinelearning;
+option go_package = "Public-automated-check-in/machinelearning/proto;proto";
+
+service MachineLearningService {
+  rpc Predict (PredictRequest) returns (PredictResponse);
+}
+
+message PredictRequest {
+  string token = 1;
+  int64 userID = 2;
+}
+
+message PredictResponse {
+   bool serviceStatus = 1;
+   string message = 2;
+}
