@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package login;
+package machinelearning;
 option go_package = "Public-automated-check-in/machinelearning/proto;proto";
 
 service MachineLearningService {

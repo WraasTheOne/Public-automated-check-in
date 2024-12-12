@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -13,10 +14,10 @@ import (
 )
 
 type DataRequest struct {
-	ESP1ID int64  `json:"ESP1ID"`
-	ESP2ID int64  `json:"ESP2ID"`
-	RSSI1  string `json:"RSSI1"`
-	RSSI2  string `json:"RSSI2"`
+	ESP1ID int64 `json:"ESP1ID"`
+	ESP2ID int64 `json:"ESP2ID"`
+	RSSI1  int64 `json:"RSSI1"`
+	RSSI2  int64 `json:"RSSI2"`
 }
 
 // WebSocket Upgrader
@@ -70,6 +71,7 @@ func WebSocketHandler(c *gin.Context) {
 			case <-timer.C:
 				// Timer expired, close the connection
 				log.Println("No data received for 30 seconds, closing connection")
+				conn.WriteMessage(websocket.TextMessage, []byte("Connection closing due to inactivity"))
 				quit <- true
 				return
 			}
@@ -101,6 +103,7 @@ func WebSocketHandler(c *gin.Context) {
 				continue
 			}
 
+			fmt.Println(dataReq)
 			// Prepare data for Redis stream
 			data := map[string]interface{}{
 				"esp1id": dataReq.ESP1ID,
@@ -109,7 +112,7 @@ func WebSocketHandler(c *gin.Context) {
 				"rssi2":  dataReq.RSSI2,
 			}
 
-			if dataReq.ESP1ID == 0 || dataReq.ESP2ID == 0 || dataReq.RSSI1 == "" || dataReq.RSSI2 == "" {
+			if dataReq.ESP1ID == 0 || dataReq.ESP2ID == 0 || dataReq.RSSI1 == 0 || dataReq.RSSI2 == 0 {
 				log.Printf("Invalid data: %v", dataReq)
 				conn.WriteMessage(websocket.TextMessage, []byte("Invalid data"))
 				continue
