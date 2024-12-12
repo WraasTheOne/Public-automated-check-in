@@ -7,15 +7,32 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS trips (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    start_location VARCHAR(255) NOT NULL,
-    end_location VARCHAR(255) NOT NULL,
-    trip_date DATETIME NOT NULL,
+    start_location VARCHAR(255) DEFAULT NULL,
+    end_location VARCHAR(255) DEFAULT NULL,
+    price INT DEFAULT 0,
+    trip_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS trip_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    trip_id INT NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS vehicles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_name VARCHAR(255),
+    current_location VARCHAR(255),
+    ammount_of_passengers INT DEFAULT 0,
+    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS bluetooth_devices (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    device_id VARCHAR(255) NOT NULL UNIQUE,
+    vehicle_id INT NOT NULL,
     device_name VARCHAR(255),
-    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
