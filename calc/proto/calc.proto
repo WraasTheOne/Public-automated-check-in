@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package calc;
+option go_package = "Public-automated-check-in/calc/proto;proto";
+
+service AuthService {
+  rpc CalcTrip (CalcTripRequest) returns (CalcTripResponse);
+}
+
+message CalcTripRequest {
+  int64 tripid = 1;
+}
+
+message CalcTripResponse {
+   bool status = 1;
+   string message = 2;
+}

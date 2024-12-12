@@ -5,6 +5,8 @@ import machinelearning_pb2_grpc
 from db import MySQLDatabase
 from redis_ops import RedisOperations
 from ml_model import MachineLearningModel
+import calc_pb2
+import calc_pb2_grpc
 
 class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServicer):
     def __init__(self):
@@ -12,6 +14,23 @@ class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServ
         self.redis = RedisOperations()
         self.ml_model = MachineLearningModel()
         self.ml_model.load("model.pkl")
+    
+    def call_calc_trip(tripid):
+    # Connect to the gRPC server
+        with grpc.insecure_channel('localhost:50051') as channel:
+            # Create a stub (client) for the AuthService
+            stub = calc_pb2_grpc.AuthServiceStub(channel)
+
+            # Create a CalcTripRequest message
+            request = calc_pb2.CalcTripRequest(tripid=tripid)
+
+            # Call the CalcTrip RPC
+            try:
+                response = stub.CalcTrip(request)
+                print(f"Status: {response.status}")
+                print(f"Message: {response.message}")
+            except grpc.RpcError as e:
+                print(f"gRPC call failed: {e.details()} (Code: {e.code()})")
 
     def Predict(self, request, context):
         user_id = request.userID
@@ -60,7 +79,10 @@ class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServ
             )
         finally:
             # Ensure resources are cleaned up
+            self.call_calc_trip(trip_id)
             self.db.close()
+            self.redis.close()
+        
             
 
 def serve():
