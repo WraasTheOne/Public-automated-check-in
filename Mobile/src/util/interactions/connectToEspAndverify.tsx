@@ -13,6 +13,7 @@ export const connectToEspAndverify = async (bleManager: BleManager, devices: Dev
 				const serverToken = await serverInterations().getToken(); // Replace with your implementation
 				const connectedDevice = await espInteract.sendToken(serverToken);
 				const token = await espInteract.receiveToken();
+				console.log("Received token:", token);
 				//send the token to the server
 				const sendToken = await serverInterations().sendResponeToken(token);
 				if (sendToken) {

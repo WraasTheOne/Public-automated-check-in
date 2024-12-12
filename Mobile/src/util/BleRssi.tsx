@@ -36,12 +36,13 @@ export const getRssiFromDevises = async (devices: Device[]): Promise<void> => {
 	console.log("Filtered RSSI names:", filteredRssiValues[0]?.name, filteredRssiValues[1]?.name);
 	console.log("Filtered RSSI values:", filteredRssiValues[0]?.rssi, filteredRssiValues[1]?.rssi);
 	const token = await AsyncStorage.getItem('userToken');
-	if (token) {
-		const response = await fetch('http://192.168.1.68:8001/dataingestion', {
+	console.log("Token:", token);
+	if (!!token) {
+		const response = await fetch('http://192.168.1.68:8081/dataingestion', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${token}`
+				'Authorization': `${token}`
 			},
 			body: JSON.stringify({
 				//the last 4 of the name
@@ -50,13 +51,15 @@ export const getRssiFromDevises = async (devices: Device[]): Promise<void> => {
 				RSSI1: filteredRssiValues[0]?.rssi,
 				RSSI2: filteredRssiValues[1]?.rssi
 			})
-		});
-		const data = await response.json();
-		if (response.ok) {
-			console.log("Data sent successfully:", data);
-		} else {
-			console.error("Failed to send data:", data.message);
+		})
+
+		response.json().then((data) => {
+			console.log("Data:", data);
 		}
+		).catch((error) => {
+			console.error("Error:", error);
+		})
+
 
 	}
 }
