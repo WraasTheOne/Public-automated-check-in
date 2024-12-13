@@ -1,7 +1,6 @@
 #include "mbedtls/md.h"
  
-String hashMsg(char *payload){
-  char *key = "secretKey";
+String hashMsg(char *payload, char *key){
   byte hmacResult[32];
  
   mbedtls_md_context_t ctx;

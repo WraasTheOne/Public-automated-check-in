@@ -11,7 +11,7 @@ var rdb *redis.Client
 // InitRedis initializes the Redis client
 func InitRedis() error {
 	rdb = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // Update if Redis is not on localhost
+		Addr: "localhost:6380", // Update if Redis is not on localhost
 	})
 	_, err := rdb.Ping().Result()
 	return err
@@ -23,9 +23,9 @@ func CloseRedis() {
 }
 
 // AddToStream adds a message to the Redis stream
-func AddToStream(streamName string, data map[string]interface{}) error {
+func AddToStream(token string, data map[string]interface{}) error {
 	err := rdb.XAdd(&redis.XAddArgs{
-		Stream: streamName,
+		Stream: token,
 		Values: data,
 	}).Err()
 	if err != nil {

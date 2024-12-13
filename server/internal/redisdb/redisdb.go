@@ -34,6 +34,7 @@ func SetWithExpiration(key string, value interface{}, expiration int64) error {
 	}
 
 	err := redisClient.Set(key, value, time.Duration(expiration)*time.Second).Err()
+	fmt.Println("the session is ", key)
 	if err != nil {
 		return fmt.Errorf("failed to set key in Redis: %v", err)
 	}

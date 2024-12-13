@@ -11,9 +11,19 @@ import {
 } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { Alert } from 'react-native';
-import getRequiredPermissions from '../util/Promisitons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useBle from '../util/BleScan';
+//add notification
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+
+Notifications.setNotificationHandler({
+	handleNotification: async () => ({
+		shouldShowAlert: true,
+		shouldPlaySound: true,
+		shouldSetBadge: false,
+	}),
+});
 
 const HomeScreen: React.FC = () => {
 	const {
@@ -26,6 +36,7 @@ const HomeScreen: React.FC = () => {
 	const { signOut } = useContext(AuthContext);
 	const [journStatus, setJournStatus] = useState(false);
 	const [colorChange, setColorChange] = useState("lightblue");
+	const [permissionStatus, setPermissionStatus] = useState('');
 
 	useEffect(() => {
 
@@ -35,9 +46,6 @@ const HomeScreen: React.FC = () => {
 				setJournStatus(true);
 				setColorChange("lightgreen");
 				await AsyncStorage.removeItem("BackIsCheakdIn");
-			}
-			else {
-				console.log("No value");
 			}
 		}
 		checkIfCheakdIn();
@@ -52,17 +60,35 @@ const HomeScreen: React.FC = () => {
 
 	}, [isCheakdIn]);
 
+	const scheduleNotification = async () => {
+		await Notifications.scheduleNotificationAsync({
+			content: {
+				title: 'Reminder',
+				body: 'Remember: somring simring',
+			},
+			// Trigger notification after 10 seconds
+			trigger: null,
+		});
+		console.log('Notification scheduled for 10 seconds from now.');
+	};
+
+
 	useEffect(() => {
-		startScan();
-		//const interval = setInterval(() => {
+		(async () => {
+			// Only request permissions on a physical device
+			if (Device.isDevice) {
+				const { status } = await Notifications.getPermissionsAsync();
+				if (status !== 'granted') {
+					const { status: newStatus } = await Notifications.requestPermissionsAsync();
+					setPermissionStatus(newStatus);
+				} else {
+					setPermissionStatus(status);
+				}
+			} else {
+				console.log('Must use physical device for Push Notifications');
+			}
+		})();
 
-		//	if (!isCheakdIn) {
-		//	}
-		//}, 10000);  // Set the interval to 10 seconds (10000 milliseconds)
-
-		//return () => {
-		//	clearInterval(interval);  // Clear the interval when the component unmounts or the dependencies change
-		//};
 	}, []);  // The effect runs when `isCheakdIn` changes
 
 	const handelStartJourney = () => {
@@ -86,6 +112,13 @@ const HomeScreen: React.FC = () => {
 			{/* First Box */}
 			<View style={styles.containerRow}>
 				<Text style={styles.title}>Latest journeys:</Text>
+
+				<TouchableOpacity
+					style={[styles.greenButton, styles.button]}
+					onPress={() => scheduleNotification()}
+				>
+					<Text style={styles.buttonText}>press this</Text>
+				</TouchableOpacity>
 			</View>
 			{/* Second Box */}
 			<View style={[styles.constSrek, { backgroundColor: colorChange }]}>

@@ -2,11 +2,10 @@ package auth
 
 
 import (
-	"Public-automated-check-in/dataingestion/proto"
+	"Public-automated-check-in/authEsp/proto"
 	"context"
 	"log"
 	"net/http"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -15,9 +14,7 @@ import (
 
 // make grpc call for auth service using roken from incomming request
 func AuthMiddleware(c *gin.Context) {
-	token := c.Query("token")
-	fmt.Println("token: ", token)
-	
+	token := c.GetHeader("Authorization")
 	if token == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
 		c.Abort()
@@ -50,3 +47,4 @@ func AuthMiddleware(c *gin.Context) {
 
 	c.Next()
 }
+

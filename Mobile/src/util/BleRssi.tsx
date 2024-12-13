@@ -1,65 +1,103 @@
 import { Device } from 'react-native-ble-plx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { act } from 'react';
 
-export const getRssiFromDevises = async (devices: Device[]): Promise<void> => {
-	console.log("Getting RSSI values for devices:", devices.map((device) => device.name));
+import { BleManager } from 'react-native-ble-plx';
 
-	const readRssi = async (device: Device): Promise<Device | null> => {
-		try {
-			const rssi = await device.readRSSI();
-			console.log("Device:", device.name, "RSSI:", rssi.rssi);
-			if (rssi.rssi) {
-				return rssi
-			}
-			return null;
-		} catch (error) {
-			console.error("Failed to read RSSI for device:", device.name, error);
-			return null;
-		}
-	}
-
-
-	const rssiValues = await Promise.all(devices.map(async (device) => {
-		return await readRssi(device);
-	}))
-
-	const filteredRssiValues = rssiValues.filter((rssi) => rssi !== null)
-
-	//sort the devices by RSSI highest to lowest
-	filteredRssiValues.sort((a, b) => {
-		if (a && b) {
-			return b.rssi - a.rssi; //i have chked the rssi values
-		}
-		return 0;
-	})
-
-	console.log("Filtered RSSI names:", filteredRssiValues[0]?.name, filteredRssiValues[1]?.name);
-	console.log("Filtered RSSI values:", filteredRssiValues[0]?.rssi, filteredRssiValues[1]?.rssi);
-	const token = await AsyncStorage.getItem('userToken');
-	console.log("Token:", token);
-	if (!!token) {
-		const response = await fetch('http://192.168.1.68:8081/dataingestion', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `${token}`
-			},
-			body: JSON.stringify({
-				//the last 4 of the name
-				ESP1ID: filteredRssiValues[0]?.name?.slice(-4),
-				ESP2ID: filteredRssiValues[1]?.name?.slice(-4),
-				RSSI1: filteredRssiValues[0]?.rssi,
-				RSSI2: filteredRssiValues[1]?.rssi
-			})
-		})
-
-		response.json().then((data) => {
-			console.log("Data:", data);
-		}
-		).catch((error) => {
-			console.error("Error:", error);
-		})
-
-
-	}
+interface RssiAndDetruments {
+	connectForSeming: (devices: Device[], bleManager: BleManager) => Promise<Device[]>;
+	streeamRssiToServer: (connectedDevices: Device[]) => Promise<void>;
 }
+
+function getRssiFromDetruments(): RssiAndDetruments {
+	const connectForSeming = async (devices: Device[], bleManager: BleManager): Promise<Device[]> => {
+		const verifyiesConnectedDevices: Device[] = [];
+		for (const device of devices) {
+			try {
+				const connectedDevice = await bleManager.connectToDevice(device.id);
+				await connectedDevice.discoverAllServicesAndCharacteristics();
+				if (!connectedDevice) {
+					console.error('Failed to connect to device:', device.name);
+					continue;
+				}
+				verifyiesConnectedDevices.push(device);
+
+			} catch (error) {
+				console.error('Failed to get RSSI:', error);
+			}
+
+		}
+		return verifyiesConnectedDevices;
+	};
+
+	const streeamRssiToServer = async (connectedDevices: Device[]): Promise<void> => {
+		//	type DataRequest struct 
+		//ESP1ID int64 `json:"ESP1ID"`
+		//ESP2ID int64 `json:"ESP2ID"`
+		//RSSI1  int64 `json:"RSSI1"`
+		//RSSI2  int64 `json:"RSSI2"`
+		//       TODO: retun a list fromm rssi and device names and sort them by higget rssi wuith the name
+
+		const token = await AsyncStorage.getItem('userToken');
+
+		const ws = new WebSocket(`ws://192.168.1.68:8082/dataingestion?token=${token}`);
+
+		ws.onopen = () => {
+			console.log('WebSocket connected');
+
+			setInterval(async () => {
+				const listOfRssisandNames = [];
+
+				for (const device of connectedDevices) {
+					try {
+						const rssi = await device.readRSSI();
+						listOfRssisandNames.push({ name: device.name || '', rssi: rssi.rssi || 0 });
+						console.log("Device name:", device.name, "RSSI:", rssi.rssi);
+					} catch (error) {
+						console.error('Failed to get RSSI:', error);
+					}
+				}
+
+				//filter for if the rssi is exalctly 0
+				listOfRssisandNames.filter((device) => device.rssi !== 0);
+
+				listOfRssisandNames.sort((a, b) => b.rssi - a.rssi);
+				console.log("Sorted list:", listOfRssisandNames);
+
+				if (listOfRssisandNames.length >= 2) {
+					ws.send(JSON.stringify({
+						//slice the nam,e to the last 4 characters
+						ESP1ID: parseInt(listOfRssisandNames[0].name.slice(-4)),
+						RSSI1: listOfRssisandNames[0].rssi,
+						ESP2ID: parseInt(listOfRssisandNames[1].name.slice(-4)),
+						RSSI2: listOfRssisandNames[1].rssi
+					}));
+				} else {
+					console.warn("Not enough devices to send data");
+				}
+			}, 5000); // Repeat every 5 seconds
+		};
+
+		ws.onmessage = (e) => {
+			// A message was received from the server
+			console.log('Received from server:', e.data);
+		};
+
+		ws.onerror = (e) => {
+			// An error occurred
+			console.log('WebSocket error:', e);
+		};
+
+		ws.onclose = (e) => {
+			// Connection closed
+			console.log('WebSocket closed:', e.code, e.reason);
+		};
+	}
+
+	return {
+		connectForSeming,
+		streeamRssiToServer
+	};
+}
+export default getRssiFromDetruments;
+

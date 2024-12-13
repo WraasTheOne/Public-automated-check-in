@@ -15,4 +15,3 @@ message AuthClientResponse {
    bool authStatus = 1;
    string message = 2;
 }
-

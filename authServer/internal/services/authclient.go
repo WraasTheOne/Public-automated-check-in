@@ -16,6 +16,9 @@ func (s *AuthClientService) AuthClient(ctx context.Context, req *proto.AuthClien
 
 	token := req.GetToken()
 
+	fmt.Printf("Received token: %v\n", token)
+
+
 	if token == "" {
 		return &proto.AuthClientResponse{
 			AuthStatus: false,

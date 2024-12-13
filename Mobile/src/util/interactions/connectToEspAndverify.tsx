@@ -1,38 +1,58 @@
 import { BleManager, Device } from "react-native-ble-plx";
-import serverInterations from "./serverInterations";
+
 import espInteractions from "./BleInterations";
+import server from "./serverInterations";
+
+
 
 //its a lsit of devices
 export const connectToEspAndverify = async (bleManager: BleManager, devices: Device[]): Promise<Device[] | null> => {
-	try {
-		const connections = devices.map(async (device): Promise<Device | null> => {
-			try {
-				console.log("Connecting to device:", device.id);
 
-				const espInteract = espInteractions(bleManager, device); // Replace with your implementation
-				const serverToken = await serverInterations().getToken(); // Replace with your implementation
-				const connectedDevice = await espInteract.sendToken(serverToken);
-				const token = await espInteract.receiveToken();
-				console.log("Received token:", token);
-				//send the token to the server
-				const sendToken = await serverInterations().sendResponeToken(token);
-				if (sendToken) {
-					return connectedDevice;
-				}
-				return null;
-			} catch (error) {
-				console.error("Error connecting to device:", error);
-				device.cancelConnection();
+	const { readChallange, ConnetAndSendChallange } = espInteractions();
+	const { sendChanglheToserver, GetChallengeFromServer } = server();
+
+	const connectedDevices: Device[] = [];
+
+	for (const device of devices) {
+		try {
+			if (!device.name) {
 				return null;
 			}
-		}
-		);
-		const connectedDevices = await Promise.all(connections);
+			console.log(`Connecting to device: ${device.name}`);
+			const serverChallenge = await GetChallengeFromServer(device.name);
+			if (!serverChallenge) {
+				continue;
+			}
 
-		return connectedDevices.filter((dev) => dev !== null);
-	} catch (error) {
-		console.error("Error in BLE scan and connect:", error);
-		return [];
+			const connectedDevice = await ConnetAndSendChallange(serverChallenge, bleManager, device);
+
+			if (!connectedDevice) {
+				console.error(`Failed to connect to device: ${device.name}`);
+				continue;
+			}
+			const computedChallenge = await readChallange(connectedDevice);
+			const approval = await sendChanglheToserver(computedChallenge, serverChallenge);
+
+			if (!approval) {
+				console.error(`Challenge verification failed for device: ${device.name}`);
+				connectedDevice.cancelConnection();
+				continue;
+			}
+			//NOTE: we are not disconnecting the device here, we will do it later
+			//
+
+			connectedDevice.cancelConnection();
+
+			console.log(`Successfully connected and verified: ${device.name}`);
+			connectedDevices.push(connectedDevice);
+		} catch (error) {
+			console.error(`Error during connection/verification for device: ${device.name}`, error);
+			device.cancelConnection();
+			continue;
+		}
+
 	}
 
+	return connectedDevices;
 }
+

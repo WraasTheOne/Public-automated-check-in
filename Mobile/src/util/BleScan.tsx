@@ -1,18 +1,16 @@
 import { useEffect } from "react";
 import { useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
 	BleManager,
 	Device,
 } from "react-native-ble-plx";
 
-import serverInterations from "./interactions/serverInterations";
-import espInteractions from "./interactions/BleInterations";
 import { connectToEspAndverify } from "./interactions/connectToEspAndverify";
-import { getRssiFromDevises } from "./BleRssi";
-
-
+import getRssiFromDetruments from "./BleRssi";
 
 import * as ExpoDevice from "expo-device";
+
 interface BlueToothLowEnergy {
 	startScan(): void;
 	disconnectAllDevices(): void;
@@ -22,12 +20,16 @@ interface BlueToothLowEnergy {
 }
 
 function useBle(): BlueToothLowEnergy {
+
+	const { connectForSeming, streeamRssiToServer } = getRssiFromDetruments();
+
 	const bleManager = useMemo(() => new BleManager(), []);
 
 	const [isCheakdIn, setIsCheakdIn] = useState(false);
+	const [isScanning, setIsScanning] = useState(false);
 
 	const [alldevices, setAllDevices] = useState<Device[]>([]);
-	const [isScanning, setIsScanning] = useState(false);
+
 	const [verifyiedList, setVerifiedList] = useState<Device[]>([]);
 
 	//disconnect all divices
@@ -56,6 +58,7 @@ function useBle(): BlueToothLowEnergy {
 		setIsScanning(true);
 		setAllDevices([]);
 		bleManager.startDeviceScan(null, null, (error, device) => {
+
 			if (error) {
 				console.error("Error during scan:", error);
 				return;
@@ -65,10 +68,7 @@ function useBle(): BlueToothLowEnergy {
 					if (!prevDevices.some((d) => d.id === device.id)) {
 						if (!verifyiedList.some((d) => d.id === device.id)) {
 							return [...prevDevices, device];
-						} else {
-							console.log("ahhaha taht waht one of the devices");
 						}
-
 					}
 					return prevDevices;
 				});
@@ -98,19 +98,20 @@ function useBle(): BlueToothLowEnergy {
 	}, [alldevices, isScanning, bleManager]);
 
 	useEffect(() => {
-
 		if (verifyiedList.length === 0) {
 			return;
 		}
-
-		const intervalId = setInterval(async () => {
-			await getRssiFromDevises(verifyiedList);
-			console.log("RSSIs:");
-		}, 2000);
-
-		return () => { console.log("Clearing RSSI monitoring interval..."); clearInterval(intervalId); };
+		const getRssi = async () => {
+			const connectedDevices = await connectForSeming(verifyiedList, bleManager);
+			if (connectedDevices.length === 0) {
+				return;
+			}
+			streeamRssiToServer(connectedDevices);
+		}
+		getRssi();
 
 	}, [verifyiedList]);
+
 
 	return {
 		startScan,

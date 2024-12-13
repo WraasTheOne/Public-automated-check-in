@@ -8,17 +8,25 @@ import { registerBackgroundFetchTask } from './util/BackgroundFetch';
 import AppNavigator from './navigation/AppNavigator';
 import getRequiredPermissions from './util/Promisitons';
 import { Alert } from 'react-native';
+import * as Notifications from 'expo-notifications';
+
 
 export default function App() {
-	const { setIsReadyForBleScan } = useContext(AuthContext);
-
 	useEffect(() => {
+
+
 		const requestPermissions = async () => {
+			//requesting permissions
+			//
+			const { status } = await Notifications.requestPermissionsAsync();
+			if (status !== 'granted') {
+				alert('No notification permissions!');
+			}
+
 			const granted = await getRequiredPermissions();
 
 			if (granted) {
 				registerBackgroundFetchTask();
-				setIsReadyForBleScan(true);
 			}
 
 			else {
@@ -26,9 +34,13 @@ export default function App() {
 			}
 
 		};
+
 		requestPermissions();
 
 	}, []);
+
+
+
 
 	return (
 		<AuthProvider>

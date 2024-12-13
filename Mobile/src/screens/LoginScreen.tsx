@@ -38,6 +38,7 @@ const LoginScreen: React.FC = () => {
 		try {
 			login(username, password)
 				.then((token) => {
+					console.log('Token:', token);
 					signIn(token);
 				})
 		} catch (e) {

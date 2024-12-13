@@ -68,7 +68,7 @@ func LoginHandler(c *gin.Context) {
 
 	redisdb.InitRedis()
 	defer redisdb.CloseRedis()
-	redisdb.SetWithExpiration(session.Token, id, 3600)
+	redisdb.SetWithExpiration(session.Token, id, 24*3600)//how long is 3600?: 3600 seconds = 1 hourc 
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",

@@ -38,6 +38,15 @@ services:
         internal_net:
           aliases:
           - streamdb.check.internal
+  espverify:
+    image: redis:latest
+    container_name: espverify
+    ports:
+      - "6381:6379"
+    networks:
+        internal_net:
+          aliases:
+          - streamdb.check.internal
 
 networks:
   internal_net:

@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -29,105 +28,112 @@ var upgrader = websocket.Upgrader{
 
 // WebSocketHandler handles WebSocket connections
 func WebSocketHandler(c *gin.Context) {
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		log.Printf("Failed to upgrade connection: %v", err)
-		return
-	}
-	defer conn.Close()
+    // If using auth.AuthMiddleware, it should set something in context if authenticated, 
+    // or have already returned a 401/403 before reaching here.
 
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
-		c.Abort()
-		return
-	}
+    // For example, if you're passing token as query param, you might validate it here:
+    token := c.Query("token")
+    if token == "" {
+        // Respond with normal HTTP error if no token is provided, and return.
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+        return
+    }
 
-	err = redisdb.InitRedis()
-	if err != nil {
-		log.Fatalf("Failed to initialize Redis: %v", err)
-	}
-	defer redisdb.CloseRedis()
+    // If you need additional token validation that is not handled by the middleware,
+    // do it here. If invalid, return an HTTP error and do not upgrade.
 
-	log.Println("WebSocket connection established")
+    conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+    if err != nil {
+        log.Printf("Failed to upgrade connection: %v", err)
+        return
+    }
+    defer conn.Close()
 
-	// Channel to signal countdown reset
-	resetCountdown := make(chan bool)
-	quit := make(chan bool)
+    log.Println("WebSocket connection established")
 
-	// Start a goroutine for the countdown
-	go func() {
-		timer := time.NewTimer(30 * time.Second)
-		defer timer.Stop()
+    // Since the connection is upgraded, do not use c.JSON or c.Abort anymore.
+    // Use conn.WriteMessage(...) or conn.ReadMessage(...) to communicate.
 
-		for {
-			select {
-			case <-resetCountdown:
-				// Reset the timer when new data is received
-				if !timer.Stop() {
-					<-timer.C
-				}
-				timer.Reset(30 * time.Second)
-			case <-timer.C:
-				// Timer expired, close the connection
-				log.Println("No data received for 30 seconds, closing connection")
-				conn.WriteMessage(websocket.TextMessage, []byte("Connection closing due to inactivity"))
-				quit <- true
-				return
-			}
-		}
-	}()
+    // Example of a simple read/write loop:
+    resetCountdown := make(chan bool)
+    quit := make(chan bool)
 
-	for {
-		select {
-		case <-quit:
-			// Exit the loop when the countdown goroutine signals to quit
-			log.Println("WebSocket handler shutting down")
-			return
-		default:
-			// Read data from the WebSocket client
-			_, message, err := conn.ReadMessage()
-			if err != nil {
-				log.Printf("Error reading message: %v", err)
-				break
-			}
+    go func() {
+        timer := time.NewTimer(30 * time.Second)
+        defer timer.Stop()
 
-			// Reset the countdown timer
-			resetCountdown <- true
+        for {
+            select {
+            case <-resetCountdown:
+                if !timer.Stop() {
+                    <-timer.C
+                }
+                timer.Reset(30 * time.Second)
+            case <-timer.C:
+                log.Println("No data received for 30 seconds, closing connection")
+                conn.WriteMessage(websocket.TextMessage, []byte("Connection closing due to inactivity"))
+                quit <- true
+                return
+            }
+        }
+    }()
 
-			var dataReq DataRequest
-			err = json.Unmarshal(message, &dataReq)
-			if err != nil {
-				log.Printf("Invalid message format: %v", err)
-				conn.WriteMessage(websocket.TextMessage, []byte("Invalid data format"))
-				continue
-			}
+    for {
+        select {
+        case <-quit:
+            log.Println("WebSocket handler shutting down")
+            return
+        default:
+            _, message, err := conn.ReadMessage()
+            if err != nil {
+                log.Printf("Error reading message: %v", err)
+                return
+            }
 
-			fmt.Println(dataReq)
-			// Prepare data for Redis stream
-			data := map[string]interface{}{
-				"esp1id": dataReq.ESP1ID,
-				"rssi1":  dataReq.RSSI1,
-				"esp2id": dataReq.ESP2ID,
-				"rssi2":  dataReq.RSSI2,
-			}
+            // Reset the countdown timer
+            resetCountdown <- true
 
-			if dataReq.ESP1ID == 0 || dataReq.ESP2ID == 0 || dataReq.RSSI1 == 0 || dataReq.RSSI2 == 0 {
-				log.Printf("Invalid data: %v", dataReq)
-				conn.WriteMessage(websocket.TextMessage, []byte("Invalid data"))
-				continue
-			}
+            var dataReq DataRequest
+            if err := json.Unmarshal(message, &dataReq); err != nil {
+                log.Printf("Invalid message format: %v", err)
+                conn.WriteMessage(websocket.TextMessage, []byte("Invalid data format"))
+                continue
+            }
 
-			// Add data to Redis stream
-			err = redisdb.AddToStream(token, data)
-			if err != nil {
-				log.Printf("Failed to add data to Redis stream: %v", err)
-				conn.WriteMessage(websocket.TextMessage, []byte("Failed to ingest data"))
-				continue
-			}
+            // Validate the data request
+            if dataReq.ESP1ID == 0 || dataReq.ESP2ID == 0 || dataReq.RSSI1 == 0 || dataReq.RSSI2 == 0 {
+                log.Printf("Invalid data: %v", dataReq)
+                conn.WriteMessage(websocket.TextMessage, []byte("Invalid data"))
+                continue
+            }
 
-			log.Printf("Data ingested: %v", data)
-			conn.WriteMessage(websocket.TextMessage, []byte("Data ingested successfully"))
-		}
-	}
+            // Add to Redis (assuming redisdb.AddToStream works as intended)
+
+            if err := redisdb.InitRedis(); err != nil {
+                log.Printf("Failed to initialize Redis: %v", err)
+                conn.WriteMessage(websocket.TextMessage, []byte("Failed to ingest data"))
+                continue
+            }
+            defer redisdb.CloseRedis()
+
+
+			//convert eact 
+            data := map[string]interface{}{
+                "esp1id": dataReq.ESP1ID,
+                "rssi1":  dataReq.RSSI1,
+                "esp2id": dataReq.ESP2ID,
+                "rssi2":  dataReq.RSSI2,
+            }
+
+            if err := redisdb.AddToStream(token, data); err != nil {
+                log.Printf("Failed to add data to Redis stream: %v", err)
+                conn.WriteMessage(websocket.TextMessage, []byte("Failed to ingest data"))
+                continue
+            }
+
+            log.Printf("Data ingested: %v", data)
+            conn.WriteMessage(websocket.TextMessage, []byte("Data ingested successfully"))
+        }
+    }
 }
+

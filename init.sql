@@ -37,3 +37,13 @@ CREATE TABLE IF NOT EXISTS bluetooth_devices (
     secret VARCHAR(255),
     FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
+
+INSERT INTO vehicles (vehicle_name, current_location, ammount_of_passengers) VALUES ('Metro', 'Sluseholmen St.', 0);
+INSERT INTO bluetooth_devices (vehicle_id, device_name, secret) VALUES (1, 'ESP32-1111', 'very_SECRET_esp_1111');
+INSERT INTO bluetooth_devices (vehicle_id, device_name, secret) VALUES (1, 'ESP32-2222', 'very_SECRET_esp_2222');
+
+
+
+
+
+
