@@ -1,0 +1,29 @@
+# Stage 1: Build the Go binary
+FROM golang:1.23 AS builder
+
+WORKDIR /workspace
+
+# Copy the Go module files and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the entire project source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o authserver ./cmd/authserver/main.go
+
+# Stage 2: Create a minimal image for running the app
+FROM alpine:latest
+
+WORKDIR /workspace
+
+# Copy the binary from the builder stage
+COPY --from=builder /workspace/authserver .
+
+# Expose the application port (adjust as needed)
+EXPOSE 9090
+
+# Command to run the application
+CMD ["/workspace/authserver"]
+

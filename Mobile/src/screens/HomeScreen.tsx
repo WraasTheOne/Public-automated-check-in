@@ -74,20 +74,21 @@ const HomeScreen: React.FC = () => {
 
 
 	useEffect(() => {
-		(async () => {
-			// Only request permissions on a physical device
-			if (Device.isDevice) {
-				const { status } = await Notifications.getPermissionsAsync();
-				if (status !== 'granted') {
-					const { status: newStatus } = await Notifications.requestPermissionsAsync();
-					setPermissionStatus(newStatus);
-				} else {
-					setPermissionStatus(status);
-				}
-			} else {
-				console.log('Must use physical device for Push Notifications');
-			}
-		})();
+		startScan();
+		//(async () => {
+		//	// Only request permissions on a physical device
+		//	if (Device.isDevice) {
+		//		const { status } = await Notifications.getPermissionsAsync();
+		//		if (status !== 'granted') {
+		//			const { status: newStatus } = await Notifications.requestPermissionsAsync();
+		//			setPermissionStatus(newStatus);
+		//		} else {
+		//			setPermissionStatus(status);
+		//		}
+		//	} else {
+		//		console.log('Must use physical device for Push Notifications');
+		//	}
+		//})();
 
 	}, []);  // The effect runs when `isCheakdIn` changes
 

@@ -5,7 +5,6 @@ import (
 	"Public-automated-check-in/authEsp/internal/auth"
 	"Public-automated-check-in/authEsp/internal/services"
 	"log"
-
 	"github.com/gin-gonic/gin"
 )
 

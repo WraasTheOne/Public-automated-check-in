@@ -33,3 +33,13 @@ class MachineLearningModel:
         input_data = pd.DataFrame([[rssi1, rssi2, passenger_count]], columns=['RSSI1', 'RSSI2', 'Passangercount'])
         prediction = self.model.predict(input_data)
         return "yes" if prediction[0] == 1 else "no"
+
+if __name__ == "__main__":
+    model = MachineLearningModel()
+    model.train("train_data.csv", "model.pkl")
+    prediction = model.predict(-70, -80, 2)
+    print(f"Prediction: {prediction}")
+
+
+
+

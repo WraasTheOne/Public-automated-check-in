@@ -28,13 +28,8 @@ var upgrader = websocket.Upgrader{
 
 // WebSocketHandler handles WebSocket connections
 func WebSocketHandler(c *gin.Context) {
-    // If using auth.AuthMiddleware, it should set something in context if authenticated, 
-    // or have already returned a 401/403 before reaching here.
-
-    // For example, if you're passing token as query param, you might validate it here:
     token := c.Query("token")
     if token == "" {
-        // Respond with normal HTTP error if no token is provided, and return.
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
         return
     }
@@ -51,8 +46,6 @@ func WebSocketHandler(c *gin.Context) {
 
     log.Println("WebSocket connection established")
 
-    // Since the connection is upgraded, do not use c.JSON or c.Abort anymore.
-    // Use conn.WriteMessage(...) or conn.ReadMessage(...) to communicate.
 
     // Example of a simple read/write loop:
     resetCountdown := make(chan bool)

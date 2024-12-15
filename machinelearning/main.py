@@ -36,7 +36,6 @@ class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServ
                     print("Prediction: No passengers detected")
                     continue
                 
-                
 
                 # Step 4: Store trip data
                 self.db.register_trip_data(trip_id, location)

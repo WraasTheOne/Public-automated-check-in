@@ -10,6 +10,8 @@ interface BleServerInteractions {
 
 const GetChallengeFromServer = async (espId: string): Promise<string> => {
 	//192.168.1.68:8050 /getChallenge/esp/:id
+	//get only the last 4 digits of espId
+	espId = espId.slice(-4);
 	const token = await AsyncStorage.getItem('userToken');
 	if (!token) {
 		throw new Error('No token found');

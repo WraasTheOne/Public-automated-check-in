@@ -53,7 +53,6 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-
 	if !hash.ComparePasswords(password, incpassword) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username or password"})
 		return

@@ -19,6 +19,12 @@ func GetChallengeForEsp(c *gin.Context) {
 	}
 
 	name := c.Param("esp_name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ESP name is required"})
+		c.Abort()
+		return
+	}
+
 
 	redisdb.InitRedis()
 	defer redisdb.CloseRedis()

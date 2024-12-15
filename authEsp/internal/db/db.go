@@ -43,7 +43,7 @@ func InitDB(username, password, host, port, dbName string) error {
 
 func GetSecretKey(espName string) (string, error) {
 	var secretKey string
-	query := fmt.Sprintf("SELECT secret FROM bluetooth_devices WHERE device_name = '%s'", espName)
+	query := fmt.Sprintf("SELECT secret FROM bluetooth_devices WHERE device_id_name = '%s'", espName)
 	// if no key is found, return an empty string thne we now taht the device is not registered
 	err := db.QueryRow(query).Scan(&secretKey)
 	if err != nil {
