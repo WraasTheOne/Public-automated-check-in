@@ -35,6 +35,16 @@ CREATE TABLE `bluetooth_devices` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `bluetooth_devices`
+--
+
+LOCK TABLES `bluetooth_devices` WRITE;
+/*!40000 ALTER TABLE `bluetooth_devices` DISABLE KEYS */;
+INSERT INTO `bluetooth_devices` VALUES (1,2222,'2024-12-12 20:21:58',1,'very_SECRET_esp_2222'),(2,1111,'2024-12-12 20:22:24',1,'very_SECRET_esp_1111');
+/*!40000 ALTER TABLE `bluetooth_devices` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `trip_data`
 --
 
@@ -49,8 +59,17 @@ CREATE TABLE `trip_data` (
   PRIMARY KEY (`id`),
   KEY `trip_id` (`trip_id`),
   CONSTRAINT `trip_data_ibfk_1` FOREIGN KEY (`trip_id`) REFERENCES `trips` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=291 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1121 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `trip_data`
+--
+
+LOCK TABLES `trip_data` WRITE;
+/*!40000 ALTER TABLE `trip_data` DISABLE KEYS */;
+/*!40000 ALTER TABLE `trip_data` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `trips`
@@ -66,11 +85,43 @@ CREATE TABLE `trips` (
   `end_location` varchar(255) DEFAULT NULL,
   `price` int DEFAULT '0',
   `trip_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `finished_trip` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `trips_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=189 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=243 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `trips`
+--
+
+LOCK TABLES `trips` WRITE;
+/*!40000 ALTER TABLE `trips` DISABLE KEYS */;
+INSERT INTO `trips` VALUES (225,1,'Sluseholmen St.','Sluseholmen St.',17,'2024-12-14 23:12:28',1),(227,1,'Amagerbro St.','Sluseholmen St.',17,'2024-12-15 09:56:11',1),(228,1,'Sluseholmen St.','Sluseholmen St.',17,'2024-12-15 17:22:49',1),(229,1,'Sluseholmen St.','Sture St.',17,'2024-12-15 17:29:20',1),(230,1,'Sture St.','CPH H',36,'2024-12-15 17:46:26',1),(231,1,'CPH H','CPH H',17,'2024-12-15 18:04:27',1),(232,1,'CPH H','CPH H',17,'2024-12-15 18:18:13',1),(233,1,'CPH H','CPH H',17,'2024-12-15 18:22:18',1),(234,1,'CPH H','CPH H',17,'2024-12-15 18:25:45',1),(235,1,'CPH H','CPH H',17,'2024-12-15 18:28:50',1),(236,1,'CPH H','CPH H',17,'2024-12-15 18:31:42',1),(237,1,'CPH H','CPH H',17,'2024-12-15 18:33:52',1),(238,1,'CPH H','CPH H',17,'2024-12-15 18:36:04',1),(239,6,'CPH H','CPH H',17,'2024-12-15 18:37:07',1),(240,6,'CPH H','CPH H',17,'2024-12-15 18:40:34',1),(241,7,'CPH H','Sluseholmen St.',24,'2024-12-15 18:40:45',1),(242,6,'Sluseholmen St.','Sluseholmen St.',17,'2024-12-15 18:42:46',1);
+/*!40000 ALTER TABLE `trips` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `update_finished_trip` BEFORE UPDATE ON `trips` FOR EACH ROW BEGIN
+    IF NEW.end_location IS NOT NULL THEN
+        SET NEW.finished_trip = TRUE;
+    ELSE
+        SET NEW.finished_trip = FALSE;
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `users`
@@ -84,10 +135,23 @@ CREATE TABLE `users` (
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `is_checked_in` tinyint(1) NOT NULL DEFAULT '0',
+  `in_transport` tinyint(1) DEFAULT '0',
+  `in_transport_updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `wallet` int DEFAULT '1500',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'user','ebdf8cc00bc4d9ceee633c56c63b49955769a92ca060825c9b08e4af61326e2b',0,0,'2024-12-15 18:38:10',1213),(6,'qwe','4ac8d99fe7077956dfa6e23acf2ec791b1a28d53511561a56829ecef7227a249',0,0,'2024-12-15 18:44:50',1449),(7,'sander','ebdf8cc00bc4d9ceee633c56c63b49955769a92ca060825c9b08e4af61326e2b',0,0,'2024-12-15 18:43:31',1400);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `vehicles`
@@ -105,6 +169,16 @@ CREATE TABLE `vehicles` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vehicles`
+--
+
+LOCK TABLES `vehicles` WRITE;
+/*!40000 ALTER TABLE `vehicles` DISABLE KEYS */;
+INSERT INTO `vehicles` VALUES (1,'Metro','Sluseholmen St.',0,'2024-12-12 20:14:42');
+/*!40000 ALTER TABLE `vehicles` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -115,5 +189,4 @@ CREATE TABLE `vehicles` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
-
--- Dump completed on 2024-12-14 18:27:40
+-- Dump completed on 2024-12-15 22:14:39
