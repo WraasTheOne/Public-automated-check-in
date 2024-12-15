@@ -10,9 +10,8 @@ import (
 func main() {
 
 	for {
-
 		checkinServise.CheckinService()
-		time.Sleep(2 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 

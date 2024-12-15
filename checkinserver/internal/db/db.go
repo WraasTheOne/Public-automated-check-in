@@ -41,15 +41,15 @@ func SetEndLocationinTrip(userID int64, location string) error {
 
 
 func GetFinishedUsers() []int64 {
-	query := "SELECT id FROM users WHERE in_transport = 0  AND TIMESTAMPDIFF(MINUTE, in_transport_updated_at, NOW()) > 2;"
+	query := "SELECT id FROM users WHERE is_checked_in = 1 AND TIMESTAMPDIFF(MINUTE, in_transport_updated_at, NOW()) > 1;"
 	var id int64 
 	err := db.QueryRow(query).Scan(&id)
 	if err != nil {
-		log.Println("no users to update")
+		log.Println("no users to update", err)
 		return nil
 	}
 
-	query = "UPDATE users SET in_transport = 0, is_checked_in = 0 WHERE id = ?"
+	query = "UPDATE users SET in_transport= 0, is_checked_in = 0 WHERE id = ?"
 	_, err = db.Exec(query, id)
 	if err != nil {
 		log.Println("Failed to update user:", err)
@@ -61,32 +61,9 @@ func GetFinishedUsers() []int64 {
 
 
 func GetAndSetLastLocation(userID int64)(int64, error) {
-//+------------+--------------+------+-----+-------------------+-------------------+
-//| Field      | Type         | Null | Key | Default           | Extra             |
-//+------------+--------------+------+-----+-------------------+-------------------+
-//| id         | int          | NO   | PRI | NULL              | auto_increment    |
-//| trip_id    | int          | NO   | MUL | NULL              |                   |
-//| position   | varchar(255) | NO   |     | NULL              |                   |
-//| time_stamp | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
-//+------------+--------------+------+-----+-------------------+-------------------+
-//4 rows in set (0.02 sec)
-//
-//Mysql> describe trip;
-//ERROR 1146 (42S02): Table 'userdb.trip' doesn't exist
-//Mysql> describe trips;
-//+----------------+--------------+------+-----+-------------------+-------------------+
-//| Field          | Type         | Null | Key | Default           | Extra             |
-//+----------------+--------------+------+-----+-------------------+-------------------+
-//| id             | int          | NO   | PRI | NULL              | auto_increment    |
-//| user_id        | int          | NO   | MUL | NULL              |                   |
-//| start_location | varchar(255) | YES  |     | NULL              |                   |
-//| end_location   | varchar(255) | YES  |     | NULL              |                   |
-//| price          | int          | YES  |     | 0                 |                   |
-//| trip_date      | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
-//+----------------+--------------+------+-----+-------------------+-------------------+
 	//first we need to get the trip id of the 
 	//last trip of the user
-	query := `select id from trips where user_id = ? order by trip_date desc limit 1`
+	query := `select id from trips where user_id = ? and finished_trip = 0 order by trip_date desc limit 1`
 	var tripID int64 
 	err := db.QueryRow(query, userID).Scan(&tripID)
 	if err != nil {

@@ -3,7 +3,8 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type AuthContextType = {
-	isReadyForBleScan: boolean;
+	isCheckedIn: boolean;
+	setIsCheckedIn: (value: boolean) => void;
 	isLoggedIn: boolean;
 	signIn: (token: string) => void;
 	signOut: () => void;
@@ -11,8 +12,9 @@ type AuthContextType = {
 
 //        NOTE:     thies vlaues are esentially 
 export const AuthContext = createContext<AuthContextType>({
-	isReadyForBleScan: false,
+	isCheckedIn: false,
 	isLoggedIn: false,
+	setIsCheckedIn: () => { },
 	signIn: () => { },
 	signOut: () => { },
 });
@@ -22,9 +24,8 @@ type Props = {
 };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-	const [isReadyForBleScan, setIsReadyForBleScan] = useState<boolean>(false);
+	const [isCheckedIn, setIsCheckedIn] = useState<boolean>(false);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-
 	useEffect(() => {
 		const checkLoginStatus = async () => {
 			try {
@@ -56,9 +57,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 		}
 	};
 
-
 	return (
-		<AuthContext.Provider value={{ isLoggedIn, signIn, signOut, isReadyForBleScan }}>
+		<AuthContext.Provider value={{ isLoggedIn, signIn, signOut, isCheckedIn, setIsCheckedIn }}>
 			{children}
 		</AuthContext.Provider>
 	);

@@ -4,40 +4,37 @@ import (
 	"log"
 	"os"
 	"github.com/joho/godotenv"
-	"fmt"
+
 )
 
+func GetPrice(locations []string) int {
 
-var zones = map[int][]string{
-		1: { "Sluseholmen St.", "Nørreport St.", "København H", "Østerport St.", "Amagerbro St.", "Christianshavn St.", },
-		2: { "Valby St.", "Frederiksberg St.", "Nordhavn St.",  "Hellerup St.", },
-		3: { "Rødovre St.",  "Glostrup St.", "Albertslund St.", "IshøjSt.", },
-		4: { "Høje Taastrup St.", "Greve St.",  "Ballerup St.", "Farum St.", "Kokkedal St.", },
-	}
-// get how different the zones are from the locations thre can be multiple zones
-func GetZones(locations []string) int {
-	// get unique locations  from the locations 
-	//count the number of diffent zones the user has been we can use location to 
-
-	uniquelocations := make(map[string]bool)
-	for _, location := range locations {
-		uniquelocations[location] = true
-	}
-	//map[Sluseholmen St.:true]
-
-	// get the zones for the locations return the number of zones 
-	// the user has been tAken from the locations
+	//for each unique location, add to the zones
 	zone := 0
-	for key, value := range zones {
-		for _, location := range value {
-			if _, ok := uniquelocations[location]; ok {
-				zone = key
-				break
-			}
-		}
+	//filter the unique locations
+	uniqueLocations := make(map[string]bool)
+	for _, location := range locations {
+		uniqueLocations[location] = true
 	}
-	fmt.Println(zone)
-	return zone
+	//get the number of zones 
+	for range uniqueLocations {
+		zone++
+	}
+
+	switch zone {
+	case 1:
+		return 17
+	case 2:
+		return 24
+	case 3:
+		return 36
+	case 4:
+		return 48
+	default:
+		return 50
+
+	}
+
 
 }
 
@@ -60,26 +57,6 @@ func LoadEnv(variable string) string {
 	}
 	return port
 }
-
-func GetPrice(zones int) int {
-	//switch statement to get the price of the zones
-
-	switch zones {
-	case 1:
-		return 17
-	case 2:
-		return 24
-	case 3:
-		return 36
-	case 4:
-		return 48
-	default:
-		return 0
-
-	}
-
-}
-
 
 
 func GetDbEnvs() (string, string, string, string, string) {

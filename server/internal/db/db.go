@@ -10,6 +10,13 @@ import (
 
 var db *sql.DB
 
+type Journey struct {
+	StartLocation string `json:"start_location"`
+	EndLocation   string `json:"end_location"`
+	Price         int    `json:"price"`
+	TripDate      string `json:"trip_date"`
+}
+
 // InitDB initializes the MySQL database connection
 func InitDB(username, password, host, port, dbName string) error {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", username, password, host, port, dbName)
@@ -58,6 +65,46 @@ func GetUser(username string) (int64, string, error) {
 	}
 
 	return id, password, nil
+}
+
+func GetCheckinStatus(id string) (bool, int64, error) {
+	query := "SELECT is_checked_in, wallet FROM users WHERE id = ?"
+	var checkedIn bool
+	var o int64
+	err := db.QueryRow(query, id).Scan(&checkedIn, &o)
+	if err == sql.ErrNoRows {
+		return false, o, nil // No user found
+	}
+	if err != nil {
+		return false, 0, fmt.Errorf("failed to query user: %v", err)
+	}
+
+	return checkedIn, o, nil
+}
+
+
+func GetJourneys(id string) ([]Journey, error) {
+	query := "SELECT start_location, end_location, price, trip_date FROM trips WHERE user_id = ? and end_location is not NULL"
+	rows, err := db.Query(query, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query trips: %v", err)
+	}
+	defer rows.Close()
+
+	var journeys []Journey
+	for rows.Next() {
+		var journey Journey
+		if err := rows.Scan(&journey.StartLocation, &journey.EndLocation, &journey.Price, &journey.TripDate); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+		journeys = append(journeys, journey)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate rows: %v", err)
+	}
+
+	return journeys, nil
 }
 
 // CloseDB closes the database connection

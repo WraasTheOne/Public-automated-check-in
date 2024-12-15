@@ -38,20 +38,9 @@ func CheckinService() {
 			return
 		}
 		// get how different the zones are from the locations thre can be multiple zones
-		zones := util.GetZones(locations)
-		if zones == 0 {
-			fmt.Println("No zones found")
-			return
-		}
-		//detuemen prrice in the utility
-		price := util.GetPrice(zones)
-		if price == 0 {
-			fmt.Println("No price found")
-			return
-		}
+		price := util.GetPrice(locations)
 		fmt.Println("Price: ", price, " kr")
 
-		//update trip price
 		err = db.UpdateTripPrice(tripID, price)
 		if err != nil {
 			fmt.Println("Failed to update trip price")

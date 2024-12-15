@@ -27,6 +27,27 @@ const login = async (username: string, password: string) => {
 	}
 	throw new Error(data.message);
 };
+const register = async (username: string, password: string) => {
+	const response = await fetch('http://192.168.1.68:8080/register', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			username,
+			password
+		})
+	});
+	const data = await response.json();
+	if (response.ok) {
+		alert('User registered');
+	}
+	else {
+		throw new Error(data.message);
+	}
+}
+
+
 
 
 const LoginScreen: React.FC = () => {
@@ -46,6 +67,14 @@ const LoginScreen: React.FC = () => {
 		}
 	};
 
+	const handleRegister = async () => {
+		try {
+			register(username, password)
+		} catch (e) {
+			Alert.alert('Woring Please try again');
+		}
+	}
+
 	return (
 		<View style={styles.container}>
 			<Text style={styles.title}>Login</Text>
@@ -64,6 +93,10 @@ const LoginScreen: React.FC = () => {
 				secureTextEntry
 			/>
 			<Button title="Login" onPress={handleLogin} />
+
+			<Button color="#841584"
+
+				title="Register" onPress={handleRegister} />
 		</View>
 	);
 };

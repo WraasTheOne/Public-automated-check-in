@@ -27,6 +27,19 @@ func InitRedis() error {
 	return nil
 }
 
+func GetUserId(token string) (string, error) {
+	if redisClient == nil {
+		return "", fmt.Errorf("Redis client is not initialized")
+	}
+
+	userID, err := redisClient.Get(token).Result()
+	if err != nil {
+		return "", fmt.Errorf("failed to get key from Redis: %v", err)
+	}
+
+	return userID, nil
+}
+
 // SetWithExpiration sets a key-value pair in Redis with an expiration time
 func SetWithExpiration(key string, value interface{}, expiration int64) error {
 	if redisClient == nil {

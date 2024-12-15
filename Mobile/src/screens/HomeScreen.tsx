@@ -1,21 +1,21 @@
 // screens/HomeScreen.tsx
 import React, { useState, useContext } from 'react';
 import { useEffect } from 'react';
-import {
-	View,
-	Text,
-	Button,
-	StyleSheet,
-	Modal,
-	TouchableOpacity
-} from 'react-native';
+import { View, Text, Animated, Button, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useBle from '../util/BleScan';
-//add notification
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+import serverinter from "../util/interactions/serverInterations";
+
+import JourneyPath from '../util/path/JourneyPath';
+
+export interface Journey {
+	start_location: string;
+	end_location: string;
+	price: number;
+	trip_date: string;
+}
 
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
@@ -26,45 +26,73 @@ Notifications.setNotificationHandler({
 });
 
 const HomeScreen: React.FC = () => {
-	const {
-		startScan,
-		disconnectAllDevices,
-		isCheakdIn
+	const { startScan } = useBle();
 
-	} = useBle();
 
+	const [scrollY] = useState(new Animated.Value(0));
+
+	const { isCheckedIn, setIsCheckedIn } = useContext(AuthContext);
 	const { signOut } = useContext(AuthContext);
+
+	const { GetCheckInStatus, GetJourneys } = serverinter();
 	const [journStatus, setJournStatus] = useState(false);
+	const [journeys, setJourneys] = useState<Journey[]>([]);
+
+	const [wallet, setWallet] = useState(0);
 	const [colorChange, setColorChange] = useState("lightblue");
-	const [permissionStatus, setPermissionStatus] = useState('');
 
 	useEffect(() => {
+		//startScan();
+		const getJourneys = async () => {
+			const journeys = await GetJourneys();
+			setJourneys(journeys);
+			journeys.forEach((journey) => {
+				console.log(journey);
+			});
 
-		const checkIfCheakdIn = async () => {
-			const value = await AsyncStorage.getItem("BackIsCheakdIn");
-			if (value) {
+		}
+		getJourneys();
+
+	}, [isCheckedIn]);
+
+	useEffect(() => {
+		const checkInStatus = async () => {
+			const [status, wallet] = await GetCheckInStatus();
+
+			// Track status changes
+			if (status !== isCheckedIn) {
+				if (status) {
+					scheduleNotification("Checked In", "You have been checked in!");
+				} else {
+					scheduleNotification("Checked Out", "You have been checked out!");
+				}
+				setIsCheckedIn(status); // Update state only when status changes
+			}
+
+			setWallet(wallet);
+
+			if (status) {
 				setJournStatus(true);
 				setColorChange("lightgreen");
-				await AsyncStorage.removeItem("BackIsCheakdIn");
+			} else {
+				setJournStatus(false);
+				setColorChange("lightblue");
 			}
-		}
-		checkIfCheakdIn();
+		};
 
-		if (isCheakdIn) {
-			setJournStatus(true);
-			setColorChange("lightgreen");
-		} else {
-			setJournStatus(false);
-			setColorChange("lightblue");
-		}
+		// Set up interval
+		const interval = setInterval(() => {
+			checkInStatus();
+		}, 3000);
 
-	}, [isCheakdIn]);
+		return () => clearInterval(interval);
+	}, [isCheckedIn]); // Depend on `isCheckedIn` to track changes
 
-	const scheduleNotification = async () => {
+	const scheduleNotification = async (tite: string, body: string) => {
 		await Notifications.scheduleNotificationAsync({
 			content: {
-				title: 'Reminder',
-				body: 'Remember: somring simring',
+				title: tite,
+				body: body,
 			},
 			// Trigger notification after 10 seconds
 			trigger: null,
@@ -72,9 +100,8 @@ const HomeScreen: React.FC = () => {
 		console.log('Notification scheduled for 10 seconds from now.');
 	};
 
-
 	useEffect(() => {
-		startScan();
+		//startScan();
 		//(async () => {
 		//	// Only request permissions on a physical device
 		//	if (Device.isDevice) {
@@ -90,21 +117,24 @@ const HomeScreen: React.FC = () => {
 		//	}
 		//})();
 
-	}, []);  // The effect runs when `isCheakdIn` changes
+	}, []);  // The effect runs when `isCheckedIn` changes
 
-	const handelStartJourney = () => {
-		startScan();
-		setJournStatus(true);
+	const handelJourney = () => {
+		//flip the value of journStatus
+		setJournStatus(!journStatus);
+		if (journStatus) {
+			setColorChange("lightblue");
+		} else {
+			setColorChange("lightgreen");
+		}
 	}
-
-	const handelEndJourney = () => {
-		disconnectAllDevices();
-		setJournStatus(false);
-	}
-
 
 	return (
 		<View style={styles.container}>
+			<View style={styles.krText}>
+				<Text style={{ fontWeight: 'bold' }}>Wallet: {wallet} KR</Text>
+			</View>
+
 			<TouchableOpacity
 				style={{ position: 'absolute', right: 10, top: 10 }}
 				onPress={signOut} >
@@ -114,33 +144,67 @@ const HomeScreen: React.FC = () => {
 			<View style={styles.containerRow}>
 				<Text style={styles.title}>Latest journeys:</Text>
 
-				<TouchableOpacity
-					style={[styles.greenButton, styles.button]}
-					onPress={() => scheduleNotification()}
+				<Animated.ScrollView
+					style={styles.scrollView}
+					onScroll={Animated.event(
+						[{ nativeEvent: { contentOffset: { y: scrollY } } }],
+						{ useNativeDriver: false }
+					)}
+					scrollEventThrottle={16}
 				>
-					<Text style={styles.buttonText}>press this</Text>
-				</TouchableOpacity>
+					{journeys.map((journey, index) => {
+						const inputRange = [1, 0, index * 100, (index + 1) * 100];
+						const scale = scrollY.interpolate({
+							inputRange,
+							outputRange: [1, 1, 1, 0.8], // Shrink near the bottom
+							extrapolate: 'clamp',
+						});
+
+						return (
+							<Animated.View
+								key={index}
+								style={[styles.itemContainer, { transform: [{ scale }] }]}
+							>
+								{/* Price on the left */}
+								<Text style={styles.price}>Price: {journey.price} KR</Text>
+
+								{/* Imported Journey Path */}
+								<JourneyPath width={300} height={61} color="#48A2B7" />
+
+								{/* Start and End Labels */}
+								<View style={styles.labelContainer}>
+									<View style={styles.label}>
+										<Text style={styles.topLabel}>{journey.start_location}</Text>
+										<Text style={styles.bottomLabel}>start</Text>
+									</View>
+									<View style={styles.label}>
+										<Text style={styles.topLabel}>{journey.end_location}</Text>
+										<Text style={styles.bottomLabel}>end</Text>
+									</View>
+								</View>
+							</Animated.View>
+						);
+					})}
+				</Animated.ScrollView>
+
+
 			</View>
 			{/* Second Box */}
 			<View style={[styles.constSrek, { backgroundColor: colorChange }]}>
 				<Text style={styles.constSrekText}>
-					{!journStatus
-						? 'Ready to start your journey?'
-						: isCheakdIn
-							? 'You are checked in'
-							: 'You are checked out'}
+					{journStatus ? "Journey started" : "Journey not started"}
 				</Text>
 				{!journStatus ? (
 					<TouchableOpacity
 						style={[styles.greenButton, styles.button]}
-						onPress={handelStartJourney}
+						onPress={handelJourney}
 					>
 						<Text style={styles.buttonText}>Start Journey</Text>
 					</TouchableOpacity>
 				) : (
 					<TouchableOpacity
 						style={[styles.redButton, styles.button]}
-						onPress={handelEndJourney}
+						onPress={handelJourney}
 					>
 						<Text style={styles.buttonText}>End Journey</Text>
 					</TouchableOpacity>
@@ -153,6 +217,62 @@ const HomeScreen: React.FC = () => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+	krText: {
+		borderRadius: 10,
+		backgroundColor: '#fff',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 4,
+		elevation: 2,
+
+
+		right: 100,
+		marginBottom: 20,
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		padding: 20,
+	},
+	itemContainer: {
+		marginBottom: 20,
+		alignItems: 'center',
+		position: 'relative',
+		backgroundColor: '#fff',
+		borderRadius: 10,
+		padding: 20,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	price: {
+		position: 'absolute',
+		top: '20%',
+		fontSize: 14,
+		fontWeight: 'bold',
+		color: '#333',
+	},
+	labelContainer: {
+		width: '100%',
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		marginTop: -10,
+	},
+	label: {
+		alignItems: 'center',
+	},
+	topLabel: {
+		fontSize: 12,
+		fontWeight: 'bold',
+		marginBottom: 4,
+		color: '#555',
+	},
+	bottomLabel: {
+		fontSize: 12,
+		color: '#777',
+	},
+
 	container: {
 		flex: 1,
 		flexDirection: 'column', // Default is column, so this line is optional

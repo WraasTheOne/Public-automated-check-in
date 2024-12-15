@@ -38,10 +38,8 @@ export const connectToEspAndverify = async (bleManager: BleManager, devices: Dev
 				connectedDevice.cancelConnection();
 				continue;
 			}
-			//NOTE: we are not disconnecting the device here, we will do it later
-			//
 
-			connectedDevice.cancelConnection();
+			bleManager.cancelDeviceConnection(device.id);
 
 			console.log(`Successfully connected and verified: ${device.name}`);
 			connectedDevices.push(connectedDevice);
