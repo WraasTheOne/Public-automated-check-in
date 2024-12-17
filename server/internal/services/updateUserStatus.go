@@ -15,6 +15,7 @@ func GetCheckinStatusHandler(c *gin.Context) {
 //get the token from the header
 	token := c.GetHeader("Authorization")
 	fmt.Println("the token is ", token)
+
 	if token == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 		return
@@ -34,6 +35,7 @@ func GetCheckinStatusHandler(c *gin.Context) {
 
 	// Load environment variables for database configuration
 	var usernamedb, passworddb, hostdb, portdb, dbname = util.GetDbEnvs()
+	fmt.Println("the db envs are ", usernamedb, passworddb, hostdb, portdb, dbname)
 
 	// Initialize database connection
 	if err := db.InitDB(usernamedb, passworddb, hostdb, portdb, dbname); err != nil {

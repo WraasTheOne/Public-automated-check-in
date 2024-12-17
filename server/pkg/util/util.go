@@ -56,6 +56,7 @@ func GetDbEnvs() (string, string, string, string, string) {
 	var hostdb = LoadEnv("USERDB_HOST")
 	var portdb = LoadEnv("USERDB_PORT")
 	var dbname = LoadEnv("USERDB_DBNAME")
+	fmt.Println(usernamedb, passworddb, hostdb, portdb, dbname)
 	return usernamedb, passworddb, hostdb, portdb, dbname
 }
 

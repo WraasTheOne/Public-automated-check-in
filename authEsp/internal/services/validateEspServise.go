@@ -39,7 +39,6 @@ func GetChallengeForEsp(c *gin.Context) {
 	}
 
 	secrectKey, err := db.GetSecretKey(name)
-	//if error then the esp not regerterd
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "ESP not registered"})
 		c.Abort()
@@ -52,12 +51,9 @@ func GetChallengeForEsp(c *gin.Context) {
 		c.Abort()
 		return
 	}
-//								 NOTE:
-//          the challenge key is the:    "token + challenge"  that are hashed with sha256
+
 	challengeKey := util.GenerateChallengeKey(token, challenge)
 	hmacValueForlater := util.HashMsg(challenge, secrectKey)
-
-	fmt.Println("hmacValueForlater: ", hmacValueForlater)
 
 	redisdb.InitRedis()
 	defer redisdb.CloseRedis()
@@ -69,17 +65,10 @@ func GetChallengeForEsp(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("challengeKey: ", challengeKey)
-	fmt.Println("hmacValueForlater: ", hmacValueForlater)
-	fmt.Println("secrectKey: ", secrectKey)
-	fmt.Println("challenge: ", challenge)
-
 	c.JSON(http.StatusOK, gin.H{"challenge": challenge})
 
 }
 
-
-//AuthenticateEsp:_
 
 func AuthenticateEsp(c *gin.Context) {
 	token := c.GetHeader("Authorization")

@@ -9,7 +9,6 @@ import (
 
 func main() {
 	router := gin.Default()
-
 	// Define routes for login and register
 	router.POST("/login", services.LoginHandler)
 	router.POST("/register", services.RegisterHandler)

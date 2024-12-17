@@ -32,7 +32,12 @@ func LoginHandler(c *gin.Context) {
 	incpassword := req.Password
 
 	// Load environment variables for database configuration
+
 	var usernamedb, passworddb, hostdb, portdb, dbname = util.GetDbEnvs()
+	fmt.Println("usernamedb", usernamedb, "passworddb", passworddb, "hostdb", hostdb, "portdb", portdb, "dbname", dbname)
+
+
+
 	fmt.Println("usernamedb", usernamedb)
 
 	// Initialize database connection

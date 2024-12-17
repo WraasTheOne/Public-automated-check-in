@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   userdb:
     image: mysql:8.0
@@ -126,7 +128,7 @@ services:
   #      internal_net:
   #        aliases:
   #          - updatestatus.check.internal
-
+          
 networks:
   internal_net:
     driver: bridge
