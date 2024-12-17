@@ -8,7 +8,7 @@ from ml_model import MachineLearningModel
 
 class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServicer):
     def __init__(self):
-        self.db = MySQLDatabase(user="root", password="rootpassword", host="127.0.0.1", port="3307", database="userdb")
+        self.db = MySQLDatabase(user="root", password="rootpassword", host="userdb", port="3307", database="userdb")
         self.redis = RedisOperations()
         self.ml_model = MachineLearningModel()
         self.ml_model.load("model.pkl")

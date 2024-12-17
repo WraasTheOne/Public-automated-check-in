@@ -1,53 +1,18 @@
 import { BleManager, Device } from "react-native-ble-plx";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import serverInterations from "./interactions/serverInterations";
-import espInteractions from "./interactions/BleInterations";
-
+import getRssiFromDetruments from "./BleRssi";
+import { connectToEspAndverify } from "./interactions/connectToEspAndverify";
 
 // Initialize BLE Manager
 const bleManager = new BleManager();
 
 // Function to start BLE scanning and connect to devices
 const discoveredDevices: Device[] = [];
-const verifiedDevices: Device[] = [];
 
 
-const checkIfstillConnected = async (device: Device): Promise<boolean> => {
+
+export const startBleScanAndConnect = async (): Promise<Boolean> => {
 	try {
-		const isConnected = await device.isConnected();
-		return isConnected;
-	} catch (error) {
-		console.error("Error checking connection status:", error);
-		return false;
-	}
-}
-
-
-export const startBleScanAndConnect = async (): Promise<Device[]> => {
-	try {
-		//fist we are instrested to see if the device is still connected with at least 1 devices
-		//to se if the device is still connected
-		if (verifiedDevices.length > 1) {
-			const mappedDevices = verifiedDevices.map(async (device) => {
-				const isConnected = await checkIfstillConnected(device);
-				if (!isConnected) {
-					console.log("Device disconnected:", device.id);
-					return null;
-				}
-				if (verifiedDevices.includes(device)) {
-					return null;
-				}
-				return device;
-			});
-			if (mappedDevices.length > 1) {
-				const connectedDevices = await Promise.all(mappedDevices);
-				verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
-				return verifiedDevices;
-			}
-		}
-		console.log("Starting BLE scan...");
-
+		const { connectForSeming, streamOnetime } = getRssiFromDetruments();
 		let coutOfDevices = 0;
 		await new Promise<void>((resolve) => {
 			bleManager.startDeviceScan(null, null, (error, device) => {
@@ -77,35 +42,34 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 
 		console.log("Discovered devices:", discoveredDevices);
 
-		const connectedDevices = await Promise.all(
-			discoveredDevices.map(async (device): Promise<Device | null> => {
-				try {
-					console.log("Connecting to device:", device.id);
 
-					// Interact with ESP32
-					const espInteract = espInteractions(bleManager, device); // Replace with your implementation
-					const serverToken = await serverInterations().getToken(); // Replace with your implementation
-					const connectedDevice = await espInteract.sendToken(serverToken);
-					const token = await espInteract.receiveToken();
+		const verifiedDevices = await connectToEspAndverify(bleManager, discoveredDevices);
 
-					//TODO:              to see if the token is valid :) 😆
-					console.log("Token received:", token);
+		if (verifiedDevices === null) {
+			return false;
+		}
 
-					// Return connected device if successful
-					return connectedDevice;
-				} catch (error) {
-					console.error("Error connecting to device:", error);
-					return null;
-				}
-			})
-		);
+		console.log("Verified devices:", verifiedDevices.length);
+		verifiedDevices.push(...verifiedDevices.filter((dev) => dev !== null));
 
-		// Filter verified devices and add to the list
-		verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
-		return verifiedDevices;
+
+		// Connect to devices for streaming RSSI
+		const connectedDevices = await connectForSeming(verifiedDevices, bleManager);
+
+		if (connectedDevices.length === 0) {
+			console.error("Failed to connect to any devices");
+			return false;
+		}
+
+		// Stream RSSI data to server
+		const streamedData = await streamOnetime(connectedDevices);
+		for (const device of connectedDevices) {
+			await bleManager.cancelDeviceConnection(device.id);
+		}
+
+		return streamedData;
 	} catch (error) {
 		console.error("Error in BLE scan and connect:", error);
-		return [];
+		return false;
 	}
 };
-

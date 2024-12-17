@@ -2,10 +2,12 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 String hashMsg(char *payload, char *key);
+
 char *key = "very_SECRET_esp_2222";
 String espName = "ESP32-2222";
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
 
 static BLECharacteristic *pCharacteristic;
 static String currentToken = "Invailed";
@@ -27,20 +29,14 @@ class MyServerCallbacks : public BLEServerCallbacks {
 // Callback class for characteristic reads and writes
 class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pChar) {
-    String incomingValue = pChar->getValue();
-
-    if (incomingValue.length() > 0) {
-      Serial.print("Received msg from app <- and form <- server : ");
-      Serial.println(incomingValue.c_str());
-
-       String newToken = hashMsg((char*) incomingValue.c_str(), key);
-      if (newToken != "ERROR") {
-        Serial.println("the compute value is: ");
-        Serial.println(newToken);
-        pChar->setValue(newToken);
+    String challange = pChar->getValue();
+    if (challange.length() > 0) {
+      Serial.println(challange.c_str());
+      String hashedChallange = hashMsg((char*) challange.c_str(), key);
+      if (hashedChallange != "ERROR") {
+        pChar->setValue(hashedChallange);
       } else {
-        Serial.println("DER ER ERROR");
-          pCharacteristic->setValue("NULL_ERROR");
+        Serial.println("ERROR");
       }
       // Update the characteristic value so that when the app reads again, it gets the updated token
     }

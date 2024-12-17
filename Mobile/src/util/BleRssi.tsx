@@ -7,6 +7,7 @@ import { BleManager } from 'react-native-ble-plx';
 interface RssiAndDetruments {
 	connectForSeming: (devices: Device[], bleManager: BleManager) => Promise<Device[]>;
 	streeamRssiToServer: (connectedDevices: Device[]) => Promise<Boolean>;
+	streamOnetime: (connectedDevices: Device[]) => Promise<Boolean>;
 }
 
 function getRssiFromDetruments(): RssiAndDetruments {
@@ -30,6 +31,79 @@ function getRssiFromDetruments(): RssiAndDetruments {
 		}
 		return verifyiesConnectedDevices;
 	};
+
+
+	const streamOnetime = async (connectedDevices: Device[]): Promise<boolean> => {
+		let streamedData = false;
+		const token = await AsyncStorage.getItem('userToken');
+		const ws = new WebSocket(`ws://192.168.1.68:8082/dataingestion?token=${token}`);
+
+		return new Promise<boolean>((resolve, reject) => {
+			ws.onopen = async () => {
+				console.log('WebSocket connected');
+
+				try {
+
+					for (let i = 0; i < 5; i++) {
+						const devicesRssi: { name: string; rssi: number }[] = [];
+						for (const device of connectedDevices) {
+							try {
+								const rssi = await device.readRSSI();
+								if (rssi?.rssi && rssi.rssi !== 0) {
+									devicesRssi.push({ name: device.name ?? '', rssi: rssi.rssi });
+									console.log("Device name:", device.name, "RSSI:", rssi.rssi);
+								}
+							} catch (error) {
+								console.error('Failed to get RSSI:', error);
+							}
+						}
+
+						// Sort devices by RSSI in descending order
+						devicesRssi.sort((a, b) => b.rssi - a.rssi);
+
+						// Ensure there are at least two devices with valid RSSI
+						if (devicesRssi.length >= 2) {
+							const parseId = (name: string) => {
+								const slicedName = name.length >= 4 ? name.slice(-4) : name;
+								return parseInt(slicedName, 10) || 0;
+							};
+
+							const dataToSend = {
+								ESP1ID: parseId(devicesRssi[0].name),
+								RSSI1: devicesRssi[0].rssi,
+								ESP2ID: parseId(devicesRssi[1].name),
+								RSSI2: devicesRssi[1].rssi
+							};
+
+							ws.send(JSON.stringify(dataToSend));
+							streamedData = true;
+							console.log('Data sent:', dataToSend);
+						} else {
+							console.log('Not enough valid devices to send data this round.');
+						}
+					}
+
+
+					ws.close();
+				} catch (err) {
+					console.error('Error during streaming:', err);
+					ws.close();
+					reject(err);
+				}
+			};
+
+			ws.onerror = (e) => {
+				console.error('WebSocket error:', e);
+				reject(e);
+			};
+
+			ws.onclose = (e) => {
+				console.log('WebSocket closed:', e.code, e.reason);
+				resolve(streamedData);
+			};
+		});
+	};
+
 
 	const streeamRssiToServer = async (connectedDevices: Device[]): Promise<boolean> => {
 		let streamedData = false;
@@ -108,6 +182,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 		});
 	};
 	return {
+		streamOnetime,
 		connectForSeming,
 		streeamRssiToServer
 	};

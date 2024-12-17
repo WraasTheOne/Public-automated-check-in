@@ -23,9 +23,7 @@ export const connectToEspAndverify = async (bleManager: BleManager, devices: Dev
 			if (!serverChallenge) {
 				continue;
 			}
-
 			const connectedDevice = await ConnetAndSendChallange(serverChallenge, bleManager, device);
-
 			if (!connectedDevice) {
 				console.error(`Failed to connect to device: ${device.name}`);
 				continue;

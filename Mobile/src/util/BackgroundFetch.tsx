@@ -1,11 +1,15 @@
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
+import serverinter from './interactions/serverInterations';
 
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 import { startBleScanAndConnect } from './BackgoudBle';
-import { getRssiFromDevises } from './BleRssi';
+
+
+
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
@@ -20,11 +24,27 @@ Notifications.setNotificationHandler({
 
 const BACKGROUND_FETCH_TASK = 'BACKGROUND_FETCH_TASK';
 
+
+const scheduleNotification = async (tite: string, body: string) => {
+	await Notifications.scheduleNotificationAsync({
+		content: {
+			title: tite,
+			body: body,
+		},
+		// Trigger notification after 10 seconds
+		trigger: null,
+	});
+	console.log('Notification scheduled for 10 seconds from now.');
+};
+
+
 // Define the background fetch task
 //
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 	try {
+		const { GetCheckInStatus, GetJourneys } = serverinter();
 		console.log('Background fetch task executed');
+
 
 		//const getFechedData = async () => {
 		//	//getChallenge/esp/ESP32-1111
@@ -65,12 +85,18 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 		//			trigger: null,
 		//		});
 		//		console.log('Local notification scheduled from background task.');
-		//	} 	
-		//} 		//const devices = await startBleScanAndConnect();
-		//if (devices.length > 1) {
-		//	getRssiFromDevises(devices);
-		//}
-		// Return success
+		//
+		const isRssied = await startBleScanAndConnect();
+		if (isRssied) {
+			const [status, wallet] = await GetCheckInStatus();
+			if (status) {
+				scheduleNotification('Checked In', 'You have been checked in!');
+			} else {
+
+			}
+
+		}
+
 		return BackgroundFetch.BackgroundFetchResult.NewData;
 	} catch (error) {
 		console.error('Error in background fetch task:', error);

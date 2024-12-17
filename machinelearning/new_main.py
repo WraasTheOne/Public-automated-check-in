@@ -9,7 +9,7 @@ from ml_model import MachineLearningModel
 
 class MachineLearningService:
     def __init__(self):
-        self.db = MySQLDatabase(user="root", password="rootpassword", host="127.0.0.1", port="3307", database="userdb")
+        self.db = MySQLDatabase(user="root", password="rootpassword", host="userdb", port="3306", database="userdb")
         self.read_stream = ReadStreamReadsOperation()
         self.get_user_id = GetUserIDReadis()
         self.ml_model = MachineLearningModel()

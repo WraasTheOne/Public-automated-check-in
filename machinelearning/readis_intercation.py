@@ -1,7 +1,7 @@
 import redis
 
 class ReadStreamReadsOperation:
-    def __init__(self, host='localhost', port=6380, db=0):
+    def __init__(self, host='streamdb', port=6379, db=0):
         self.client = redis.StrictRedis(host=host, port=port, db=db)
 
     def get_keys_from_stream(self):
@@ -22,7 +22,7 @@ class ReadStreamReadsOperation:
 
 class GetUserIDReadis:
     def __init__(self):
-        self.client = redis.StrictRedis(host='localhost', port=6379, db=0)
+        self.client = redis.StrictRedis(host='sessiondb', port=6379, db=0)
 
     def get_user_id(self, token):
         try:

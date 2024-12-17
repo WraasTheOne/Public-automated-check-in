@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   userdb:
     image: mysql:8.0
     container_name: userdb
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword  # Set the root user's password
-      MYSQL_DATABASE: userdb             # Name of the default database
-      MYSQL_USER: appuser                # Name of a regular user
-      MYSQL_PASSWORD: appuserpassword    # Password for the regular user
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: userdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: appuserpassword
     ports:
-      - "3307:3306"
+      - "3307:3306"  # Correct internal port for MySQL
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -23,60 +21,111 @@ services:
     image: redis:latest
     container_name: sessiondb
     ports:
-      - "6379:6379"
+      - "6379:6379"  # Host port 6379 -> Container port 6379
     networks:
       internal_net:
         aliases:
           - sessiondb.check.internal
-  
+
   streamdb:
     image: redis:latest
     container_name: streamdb
     ports:
-      - "6380:6379"
+      - "6380:6379"  # Host port 6380 -> Container port 6379
     networks:
-        internal_net:
-          aliases:
+      internal_net:
+        aliases:
           - streamdb.check.internal
 
   espverify:
     image: redis:latest
     container_name: espverify
     ports:
-      - "6381:6379"
+      - "6381:6379"  # Host port 6381 -> Container port 6379
     networks:
-        internal_net:
-          aliases:
-          - streamdb.check.internal
+      internal_net:
+        aliases:
+          - espverify.check.internal
 
-  ##  go_loginserver:
-  ##    image: server_app:latest
-  ##    container_name: loginserver
-  ##    ports:
-  ##      - "4040:8080"
-  ##    depends_on:
-  ##      - userdb
-  ##      - sessiondb
-  ##      - streamdb
-  ##    networks:
-  ##        internal_net:
-  ##          aliases:
-  ##          - streamdb.check.internal
-  ##
-  ##  go_authserver:
-  ##    image: server_app:latest
-  ##    container_name: loginserver
-  ##    ports:
-  ##      - "4041:9090"
-  ##    depends_on:
-  ##      - userdb
-  ##      - sessiondb
-  ##      - streamdb
-  ##    networks:
-  ##        internal_net:
-  ##          aliases:
-  ##          - streamdb.check.internal
-
+  #  authserver:
+  #    image: authserver:latest
+  #    container_name: authserver
+  #    ports:
+  #      - "3003:3003"
+  #    depends_on:
+  #      - userdb
+  #      - sessiondb
+  #      - streamdb
+  #    networks:
+  #      internal_net:
+  #        aliases:
+  #          - authserver.check.internal
+  #
+  #  mainserver:
+  #    image: mainserver:latest
+  #    container_name: mainserver
+  #    ports:
+  #      - "8080:8080"
+  #    depends_on:
+  #      - authserver
+  #      - userdb
+  #      - sessiondb
+  #    networks:
+  #      internal_net:
+  #        aliases:
+  #          - mainserver.check.internal
+  #
+  #  authesp:
+  #    image: authesp:latest
+  #    container_name: authesp
+  #    ports:
+  #      - "8050:8050"
+  #    depends_on:
+  #      - authserver
+  #      - espverify
+  #      - userdb
+  #    networks:
+  #      internal_net:
+  #        aliases:
+  #          - authesp.check.internal
+  #
+  #  datastream:
+  #    image: datastream:latest
+  #    container_name: datastream
+  #    ports:
+  #      - "8082:8082"
+  #    depends_on:
+  #      - authserver
+  #      - streamdb
+  #      - mlserver
+  #    networks:
+  #      internal_net:
+  #        aliases:
+  #          - datastream.check.internal
+  #
+  #  mlserver:
+  #    image: mlserver:latest
+  #    container_name: mlserver
+  #    depends_on:
+  #      - sessiondb
+  #      - streamdb
+  #      - userdb
+  #      # Removed datastream from depends_on
+  #    networks:
+  #      internal_net:
+  #        aliases:
+  #          - mlserver.check.internal
+  #
+  #  update_status:
+  #    image: update_status:latest
+  #    container_name: update_status
+  #    depends_on:
+  #      - sessiondb
+  #      - userdb
+  #    networks:
+  #      internal_net:
+  #        aliases:
+  #          - updatestatus.check.internal
 
 networks:
   internal_net:

@@ -10,8 +10,9 @@ RUN go mod download
 # Copy the entire project source code
 COPY . .
 
+#"   C:\Users\alexa\SanderStuff\p5\Public-automated-check-in\\cmd\checkinserver
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o authserver ./cmd/authserver/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o updatestatus ./cmd/checkinserver/main.go
 
 # Stage 2: Create a minimal image for running the app
 FROM alpine:latest
@@ -19,11 +20,9 @@ FROM alpine:latest
 WORKDIR /workspace
 
 # Copy the binary from the builder stage
-COPY --from=builder /workspace/authserver .
-
-# Expose the application port (adjust as needed)
-EXPOSE 3003
+COPY --from=builder /workspace/updatestatus .
 
 # Command to run the application
-CMD ["/workspace/authserver"]
+CMD ["/workspace/updatestatus"]
+
 

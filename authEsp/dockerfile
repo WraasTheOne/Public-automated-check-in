@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o authserver ./cmd/authserver/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o authesp ./cmd/authEsp/main.go
 
 # Stage 2: Create a minimal image for running the app
 FROM alpine:latest
@@ -19,11 +19,11 @@ FROM alpine:latest
 WORKDIR /workspace
 
 # Copy the binary from the builder stage
-COPY --from=builder /workspace/authserver .
+COPY --from=builder /workspace/authesp .
+COPY --from=builder /workspace/config/.env ./config/.env
 
 # Expose the application port (adjust as needed)
-EXPOSE 3003
+EXPOSE 8050
 
 # Command to run the application
-CMD ["/workspace/authserver"]
-
+CMD ["/workspace/authesp"]

@@ -24,7 +24,7 @@ func main() {
 
 	port := "8050"
 	log.Printf("WebSocket ingestion service running on port %s", port)
-	if err := router.Run("192.168.1.68:" + port); err != nil {
+	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

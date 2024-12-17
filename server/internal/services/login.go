@@ -20,6 +20,7 @@ func LoginHandler(c *gin.Context) {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
+	fmt.Println("LoginHandler", req)
 
 	// Bind JSON payload to request struct
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -32,6 +33,7 @@ func LoginHandler(c *gin.Context) {
 
 	// Load environment variables for database configuration
 	var usernamedb, passworddb, hostdb, portdb, dbname = util.GetDbEnvs()
+	fmt.Println("usernamedb", usernamedb)
 
 	// Initialize database connection
 	if err := db.InitDB(usernamedb, passworddb, hostdb, portdb, dbname); err != nil {
@@ -40,6 +42,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	defer db.CloseDB()
+	fmt.Println("yooooooo 1")
 
 
 	// Fetch user details
