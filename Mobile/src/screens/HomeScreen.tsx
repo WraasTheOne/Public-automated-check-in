@@ -140,52 +140,34 @@ const HomeScreen: React.FC = () => {
 				onPress={signOut} >
 				<Text> Logout </Text>
 			</TouchableOpacity>
-			{/* First Box */}
 			<View style={styles.containerRow}>
 				<Text style={styles.title}>Latest journeys:</Text>
+                <View  >
+                <ScrollView>
 
-				<Animated.ScrollView
-					style={styles.scrollView}
-					onScroll={Animated.event(
-						[{ nativeEvent: { contentOffset: { y: scrollY } } }],
-						{ useNativeDriver: false }
-					)}
-					scrollEventThrottle={16}
-				>
-					{journeys.map((journey, index) => {
-						const inputRange = [1, 0, index * 100, (index + 1) * 100];
-						const scale = scrollY.interpolate({
-							inputRange,
-							outputRange: [1, 1, 1, 0.8], // Shrink near the bottom
-							extrapolate: 'clamp',
-						});
+                				{journeys.map((journey, index) => (
+					<View key={index} style={styles.itemContainer}>
+						{/* Price on the left */}
+						<Text style={styles.price}>Price: {journey.price} KR</Text>
+						{/* Imported Journey Path */}
+						<JourneyPath width={300} height={61} color="#48A2B7" />
 
-						return (
-							<Animated.View
-								key={index}
-								style={[styles.itemContainer, { transform: [{ scale }] }]}
-							>
-								{/* Price on the left */}
-								<Text style={styles.price}>Price: {journey.price} KR</Text>
+						{/* Start and End Labels */}
+						<View style={styles.labelContainer}>
+							<View style={styles.label}>
+								<Text style={styles.topLabel}>{journey.start_location}</Text>
+								<Text style={styles.bottomLabel}>start</Text>
+							</View>
+							<View style={styles.label}>
+								<Text style={styles.topLabel}>{journey.end_location}</Text>
+								<Text style={styles.bottomLabel}>end</Text>
+							</View>
+						</View>
+					</View>
+				))}
+</ScrollView>
+</View>
 
-								{/* Imported Journey Path */}
-								<JourneyPath width={300} height={61} color="#48A2B7" />
-
-								{/* Start and End Labels */}
-								<View style={styles.labelContainer}>
-									<View style={styles.label}>
-										<Text style={styles.topLabel}>{journey.start_location}</Text>
-										<Text style={styles.bottomLabel}>start</Text>
-									</View>
-									<View style={styles.label}>
-										<Text style={styles.topLabel}>{journey.end_location}</Text>
-										<Text style={styles.bottomLabel}>end</Text>
-									</View>
-								</View>
-							</Animated.View>
-						);
-					})}
-				</Animated.ScrollView>
 
 
 			</View>

@@ -34,7 +34,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 	const streeamRssiToServer = async (connectedDevices: Device[]): Promise<boolean> => {
 		let streamedData = false;
 		const token = await AsyncStorage.getItem('userToken');
-		const ws = new WebSocket(`ws://192.168.1.68:8082/dataingestion?token=${token}`);
+		const ws = new WebSocket(`ws://192.168.102.10:8082/dataingestion?token=${token}`);
 
 		const DELAY_BETWEEN_SENDS = 3000;
 
@@ -77,8 +77,11 @@ function getRssiFromDetruments(): RssiAndDetruments {
 
 							ws.send(JSON.stringify(dataToSend));
 							streamedData = true;
+
 						} else {
-							console.log('Not enough valid devices to send data this round.');
+
+                            break;
+
 						}
 
 						// Wait before sending the next packet, except after the last iteration
