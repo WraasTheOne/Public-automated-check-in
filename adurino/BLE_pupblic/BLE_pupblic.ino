@@ -3,8 +3,8 @@
 #include <BLEServer.h>
 String hashMsg(char *payload, char *key);
 
-char *key = "very_SECRET_esp_2222";
-String espName = "ESP32-2222";
+char *key = "very_SECRET_esp_4444";
+String espName = "ESP32-4444";
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
@@ -12,7 +12,6 @@ String espName = "ESP32-2222";
 static BLECharacteristic *pCharacteristic;
 static String currentToken = "Invailed";
 
-// Callback class for server (optional, handles connections/disconnections)
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
     BLEAddress connectedDevice(param->connect.remote_bda);
@@ -54,7 +53,7 @@ void setup() {
 
   Serial.println("Starting BLE...");
   BLEDevice::init(espName);//dette er ble navenet
-  Serial.println(espName);
+  Serial.println(espName.c_str());
 
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());

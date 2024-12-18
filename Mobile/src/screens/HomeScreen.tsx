@@ -14,7 +14,7 @@ export interface Journey {
 	start_location: string;
 	end_location: string;
 	price: number;
-	trip_date: string;
+	trip_date: Date;
 }
 
 Notifications.setNotificationHandler({
@@ -27,10 +27,6 @@ Notifications.setNotificationHandler({
 
 const HomeScreen: React.FC = () => {
 	const { startScan } = useBle();
-
-
-	const [scrollY] = useState(new Animated.Value(0));
-
 	const { isCheckedIn, setIsCheckedIn } = useContext(AuthContext);
 	const { signOut } = useContext(AuthContext);
 
@@ -46,9 +42,6 @@ const HomeScreen: React.FC = () => {
 		const getJourneys = async () => {
 			const journeys = await GetJourneys();
 			setJourneys(journeys);
-			journeys.forEach((journey) => {
-				console.log(journey);
-			});
 
 		}
 		getJourneys();
@@ -59,14 +52,13 @@ const HomeScreen: React.FC = () => {
 		const checkInStatus = async () => {
 			const [status, wallet] = await GetCheckInStatus();
 
-			// Track status changes
 			if (status !== isCheckedIn) {
 				if (status) {
 					scheduleNotification("Checked In", "You have been checked in!");
 				} else {
 					scheduleNotification("Checked Out", "You have been checked out!");
 				}
-				setIsCheckedIn(status); // Update state only when status changes
+				setIsCheckedIn(status);
 			}
 
 			setWallet(wallet);
@@ -146,18 +138,19 @@ const HomeScreen: React.FC = () => {
 				<ScrollView>
 					{journeys.map((journey, index) => (
 						<View key={index} style={styles.itemContainer}>
-							{/* Price on the left */}
-							<Text style={styles.price}>Price: ${journey.price}</Text>
+							<View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+								<Text style={styles.price} >Price: {journey.price} Kr</Text>
+								<Text style={styles.price}>{journey.trip_date.toDateString()}</Text>
+							</View>
 
-							{/* SVG Path */}
 							<JourneyPath width={300} height={50} color="#48A2B7" />
 
-							{/* Start and End Labels */}
 							<View style={styles.labelContainer}>
 								<View style={styles.label}>
 									<Text style={styles.topLabel}>{journey.start_location}</Text>
 									<Text style={styles.bottomLabel}>start</Text>
 								</View>
+
 								<View style={styles.label}>
 									<Text style={styles.topLabel}>{journey.end_location}</Text>
 									<Text style={styles.bottomLabel}>end</Text>
@@ -213,6 +206,7 @@ const styles = StyleSheet.create({
 		padding: 20,
 	},
 	itemContainer: {
+		//create a lignre gradient that take hte make the boxese more transparent in hte end of the view
 		marginBottom: 20,
 		alignItems: 'center',
 		position: 'relative',
@@ -226,7 +220,6 @@ const styles = StyleSheet.create({
 		elevation: 2,
 	},
 	price: {
-		position: 'absolute',
 		top: '20%',
 		fontSize: 14,
 		fontWeight: 'bold',

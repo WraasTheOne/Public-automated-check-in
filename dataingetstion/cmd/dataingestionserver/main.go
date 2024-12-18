@@ -13,9 +13,6 @@ func main() {
 	// Setup Gin server
 	router := gin.Default()
 
-	// Middleware to authenticate token
-	//router.Use(auth.AuthMiddleware)
-
 	// WebSocket endpoint
 	router.GET("/dataingestion", services.WebSocketHandler)
 

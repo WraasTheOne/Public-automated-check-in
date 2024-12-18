@@ -19,7 +19,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 				const connectedDevice = await bleManager.connectToDevice(device.id);
 				await connectedDevice.discoverAllServicesAndCharacteristics();
 				if (!connectedDevice) {
-					console.error('Failed to connect to device:', device.name);
+					console.log("Failed to connect to device ", device.name);
 					continue;
 				}
 				verifyiesConnectedDevices.push(device);
@@ -60,6 +60,10 @@ function getRssiFromDetruments(): RssiAndDetruments {
 
 						// Sort devices by RSSI in descending order
 						devicesRssi.sort((a, b) => b.rssi - a.rssi);
+
+						console.log('Devices with RSSI:', devicesRssi);
+
+
 
 						// Ensure there are at least two devices with valid RSSI
 						if (devicesRssi.length >= 2) {
@@ -125,7 +129,6 @@ function getRssiFromDetruments(): RssiAndDetruments {
 								const rssi = await device.readRSSI();
 								if (rssi?.rssi && rssi.rssi !== 0) {
 									devicesRssi.push({ name: device.name ?? '', rssi: rssi.rssi });
-									console.log("Device name:", device.name, "RSSI:", rssi.rssi);
 								}
 							} catch (error) {
 								console.error('Failed to get RSSI:', error);
@@ -134,6 +137,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 
 						// Sort descending by RSSI
 						devicesRssi.sort((a, b) => b.rssi - a.rssi);
+
 
 						// Ensure we have at least two devices with valid RSSI
 						if (devicesRssi.length >= 2) {
@@ -148,6 +152,8 @@ function getRssiFromDetruments(): RssiAndDetruments {
 								ESP2ID: parseId(devicesRssi[1].name),
 								RSSI2: devicesRssi[1].rssi
 							};
+
+							console.log('Data sent:', dataToSend);
 
 							ws.send(JSON.stringify(dataToSend));
 							streamedData = true;

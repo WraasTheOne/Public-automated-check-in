@@ -1,6 +1,3 @@
-import { useEffect, useState } from 'react';
-import { BleManager, Device } from 'react-native-ble-plx';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
@@ -29,7 +26,7 @@ export interface Journey {
 	start_location: string;
 	end_location: string;
 	price: number
-	trip_date: string;
+	trip_date: Date;
 }
 
 
@@ -78,7 +75,6 @@ const sendChanglheToserver = async (computedChallange: string, serverChallange: 
 		})
 	});
 	const data = await response.json();
-	console.log(data);
 	if (response.status === 200) {
 		return true;
 	}
@@ -122,7 +118,6 @@ const GetJourneys = async (): Promise<Journey[]> => {
 	if (response.status === 200) {
 
 		const journeys: Journey[] = data.journeys.map((journey: any) => {
-			console.log(journey.price);
 			return {
 				start_location: journey.start_location,
 				end_location: journey.end_location,

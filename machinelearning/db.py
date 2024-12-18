@@ -22,6 +22,17 @@ class MySQLDatabase:
         except mysql.connector.Error as e:
             raise Exception(f"Failed to get check-in status: {e}")
 
+    def get_is_in_transport(self, user_id):
+        query = "SELECT in_transport FROM users WHERE id = %s"
+        try:
+            self.cursor.execute(query, (user_id,))
+            result = self.cursor.fetchone()
+            if not result:
+                raise Exception(f"No user found for user ID {user_id}")
+            return result['in_transport']
+        except mysql.connector.Error as e:
+            raise Exception(f"Failed to get transport status: {e}")
+
     def update_checkin_status(self, user_id, status):
         ##i use true and false instead of 1 and 0
         query = "UPDATE users SET is_checked_in = %s WHERE id = %s"

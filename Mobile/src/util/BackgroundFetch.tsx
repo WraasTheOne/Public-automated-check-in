@@ -2,9 +2,7 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import serverinter from './interactions/serverInterations';
 
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 import { startBleScanAndConnect } from './BackgoudBle';
 
@@ -86,11 +84,12 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 		//		});
 		//		console.log('Local notification scheduled from background task.');
 		//
+
 		const isRssied = await startBleScanAndConnect();
 		if (isRssied) {
 			const [status, wallet] = await GetCheckInStatus();
 			if (status) {
-				scheduleNotification('Checked In', 'You have been checked in!');
+				//scheduleNotification('Checked In', 'You have been checked in!');
 			} else {
 
 			}

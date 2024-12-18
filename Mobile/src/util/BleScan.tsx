@@ -62,6 +62,11 @@ function useBle(): BlueToothLowEnergy {
 		setTimeout(() => {
 			console.log("Stopping scan...");
 
+			if (alldevices.length === 0) {
+				console.log("No devices found");
+				setIsScanning(true);
+			}
+
 			bleManager.stopDeviceScan();
 			setIsScanning(false);
 		}, 3000)
@@ -71,9 +76,7 @@ function useBle(): BlueToothLowEnergy {
 
 		if (redyToScan) {
 			setRedyToScan(false);
-
 			setTimeout(() => { startScan(); }, 20000);
-
 		}
 
 	}, [redyToScan]);

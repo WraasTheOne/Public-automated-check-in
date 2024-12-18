@@ -42,7 +42,10 @@ export const startBleScanAndConnect = async (): Promise<Boolean> => {
 
 		console.log("Discovered devices:", discoveredDevices);
 
-
+		if (discoveredDevices.length === 0) {
+			console.log("No devices found");
+			return false;
+		}
 		const verifiedDevices = await connectToEspAndverify(bleManager, discoveredDevices);
 
 		if (verifiedDevices === null) {
@@ -56,15 +59,19 @@ export const startBleScanAndConnect = async (): Promise<Boolean> => {
 		// Connect to devices for streaming RSSI
 		const connectedDevices = await connectForSeming(verifiedDevices, bleManager);
 
-		if (connectedDevices.length === 0) {
-			console.error("Failed to connect to any devices");
+		if (connectedDevices.length < 1) {
+			console.log("not inough devices to connect");
 			return false;
 		}
 
 		// Stream RSSI data to server
 		const streamedData = await streamOnetime(connectedDevices);
 		for (const device of connectedDevices) {
-			await bleManager.cancelDeviceConnection(device.id);
+			try {
+				await device.cancelConnection();
+			} catch (error) {
+				console.log("Error during device disconnection:", error);
+			}
 		}
 
 		return streamedData;

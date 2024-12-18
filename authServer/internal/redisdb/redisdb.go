@@ -13,7 +13,7 @@ var redisClient *redis.Client
 func InitRedis() error {
 	// this in the sessiondb
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "sessiondbc:6379", // Redis address, ensure it matches your configuration
+		Addr:     "localhost:6379", // Redis address, ensure it matches your configuration
 		Password: "",               // No password set (update if your Redis instance uses a password)
 		DB:       0,                // Use the default DB
 	})
