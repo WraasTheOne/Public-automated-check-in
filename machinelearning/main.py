@@ -1,74 +1,75 @@
-import grpc
-from concurrent import futures
-import machinelearning_pb2
-import machinelearning_pb2_grpc
+import time
 from db import MySQLDatabase
-from redis_ops import RedisOperations
+
+from readis_intercation import ReadStreamReadsOperation
+from readis_intercation import GetUserIDReadis
+
 from ml_model import MachineLearningModel
 
-class MachineLearningService(machinelearning_pb2_grpc.MachineLearningServiceServicer):
+
+class MachineLearningService:
     def __init__(self):
         self.db = MySQLDatabase(user="root", password="rootpassword", host="127.0.0.1", port="3307", database="userdb")
-        self.redis = RedisOperations()
+        self.read_stream = ReadStreamReadsOperation()
+        self.get_user_id = GetUserIDReadis()
         self.ml_model = MachineLearningModel()
-        self.ml_model.load("model.pkl")
+        self.ml_model.load("model.pkl") 
 
-    def Predict(self, request, context):
-        user_id = request.userID
-        token = request.token
+            #        data := map[string]interface{}{
+            #    "esp1id": dataReq.ESP1ID,
+            #    "rssi1":  dataReq.RSSI1,
+            #    "esp2id": dataReq.ESP2ID,
+            #    "rssi2":  dataReq.RSSI2,
+            #}
 
-        try:
-            # Step 1: Register the trip
-            trip_id = self.db.register_trip(user_id)
-            print(f"Registered trip with ID: {trip_id}")
 
-            # Step 2: Process Redis stream
-            timeout = 30  # Timeout in seconds
-            while timeout > 0:
-                data, message_id = self.redis.read_first_from_stream(token)
 
-                # Step 3: Extract and process data
-                esp1_id = int(data['ESP1ID'])
-                location, passengers = self.db.get_current_location(esp1_id)
-                print(f"Location: {location}, Passengers: {passengers}")
-                
-                if self.ml_model.predict(data['RSSI1'], data['RSSI2'], passengers) == "no":
-                    print("Prediction: No passengers detected")
+    def process_stream(self):
+        while True:
+            keys = self.read_stream.get_keys_from_stream()
+            for key in keys:
+                user_id = self.get_user_id.get_user_id(key.decode("utf-8"))
+                if user_id is None:
                     continue
-                
+                data = self.read_stream.read_stream(key)
 
-                # Step 4: Store trip data
-                self.db.register_trip_data(trip_id, location)
-                print(f"Stored trip data for trip ID {trip_id} at location {location}")
+                check_in_startus = self.db.get_checkin_status(user_id)
+                for entry in data:
 
-                # Step 5: Delete message from Redis
-                self.redis.delete_message_from_stream(token, message_id)
-                print(f"Deleted message ID {message_id} from Redis stream")
+                    date = entry[0].decode("utf-8")
+                    rssi1 = entry[1][b'rssi1'].decode("utf-8")
+                    esp1id = entry[1][b'esp1id'].decode("utf-8")
+                    rssi2 = entry[1][b'rssi2'].decode("utf-8")
+                    esp2id = entry[1][b'esp2id'].decode("utf-8")
 
-                timeout -= 1  # Decrement timeout for each successful operation
+                    get_current_location = self.db.get_current_location(esp1id)
+                    print(get_current_location[0])
 
-            return machinelearning_pb2.PredictResponse(
-                serviceStatus=True,
-                message="Prediction process completed successfully"
-            )
-        except Exception as e:
-            print(f"Error in Predict: {e}")
-            return machinelearning_pb2.PredictResponse(
-                serviceStatus=False,
-                message=str(e)
-            )
-        finally:
-            # Ensure resources are cleaned up
-            self.db.close()
-            
+                    prediction = self.ml_model.predict(rssi1, rssi2, 1)
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    machinelearning_pb2_grpc.add_MachineLearningServiceServicer_to_server(MachineLearningService(), server)
-    server.add_insecure_port('[::]:50051')
-    server.start()
-    print("Server started on port 50051")
-    server.wait_for_termination()
+                    if prediction == "yes":
+                        self.db.set_transport_status(user_id, 1)
+                    else:
+                        self.db.set_transport_status(user_id, 0)
+
+                    print(prediction)
+
+
+                    print(prediction)
+
+                    if prediction == "yes" and check_in_startus == 0:
+                        # if allrams is true 
+                        if self.db.get_checkin_status(user_id) == 1:
+                            continue
+                        self.db.update_checkin_status(user_id, 1)
+                        print("---------checkin---------")
+                        self.db.register_trip(user_id, get_current_location[0])
+
+                    self.db.register_trip_data(get_current_location[0])
+
+                    self.read_stream.delete_message_from_stream(key, date)
+            time.sleep(1)
 
 if __name__ == "__main__":
-    serve()
+    service = MachineLearningService()
+    service.process_stream()
