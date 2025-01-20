@@ -44,7 +44,7 @@ function useBle(): BlueToothLowEnergy {
 
 
 			if (error) {
-				console.error("Error during scan:", error);
+				console.log("Error during scan:", error);
 				return;
 			}
 

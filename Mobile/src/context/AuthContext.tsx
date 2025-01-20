@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 				const token = await AsyncStorage.getItem('userToken');
 				setIsLoggedIn(!!token);
 			} catch (e) {
-				console.error('Failed to load token');
+				console.log('Failed to load token');
 			}
 		};
 
@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 			await AsyncStorage.setItem('userToken', token);
 			setIsLoggedIn(true);
 		} catch (e) {
-			console.error('Failed to save token');
+			console.log('Failed to save token');
 		}
 	};
 
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 			await AsyncStorage.removeItem('userToken');
 			setIsLoggedIn(false);
 		} catch (e) {
-			console.error('Failed to remove token');
+			console.log('Failed to remove token');
 		}
 	};
 

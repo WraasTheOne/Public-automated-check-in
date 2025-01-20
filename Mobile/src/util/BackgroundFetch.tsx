@@ -73,7 +73,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 		// Return success
 		return BackgroundFetch.BackgroundFetchResult.NewData;
 	} catch (error) {
-		console.error('Error in background fetch task:', error);
+		console.log('Error in background fetch task:', error);
 		// Return failure
 		return BackgroundFetch.BackgroundFetchResult.Failed;
 	}
@@ -100,6 +100,6 @@ export const registerBackgroundFetchTask = async () => {
 			console.log('Background fetch task already registered');
 		}
 	} catch (error) {
-		console.error('Error registering background fetch task:', error);
+		console.log('Error registering background fetch task:', error);
 	}
 };

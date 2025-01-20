@@ -18,7 +18,7 @@ const checkIfstillConnected = async (device: Device): Promise<boolean> => {
 		const isConnected = await device.isConnected();
 		return isConnected;
 	} catch (error) {
-		console.error("Error checking connection status:", error);
+		console.log("Error checking connection status:", error);
 		return false;
 	}
 }
@@ -52,7 +52,7 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 		await new Promise<void>((resolve) => {
 			bleManager.startDeviceScan(null, null, (error, device) => {
 				if (error) {
-					console.error("Error during scan:", error);
+					console.log("Error during scan:", error);
 					bleManager.stopDeviceScan();
 					resolve();
 					return;
@@ -94,7 +94,7 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 					// Return connected device if successful
 					return connectedDevice;
 				} catch (error) {
-					console.error("Error connecting to device:", error);
+					console.log("Error connecting to device:", error);
 					return null;
 				}
 			})
@@ -104,7 +104,7 @@ export const startBleScanAndConnect = async (): Promise<Device[]> => {
 		verifiedDevices.push(...connectedDevices.filter((dev) => dev !== null));
 		return verifiedDevices;
 	} catch (error) {
-		console.error("Error in BLE scan and connect:", error);
+		console.log("Error in BLE scan and connect:", error);
 		return [];
 	}
 };

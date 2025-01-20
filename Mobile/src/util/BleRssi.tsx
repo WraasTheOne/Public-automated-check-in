@@ -18,7 +18,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 				const connectedDevice = await bleManager.connectToDevice(device.id);
 				await connectedDevice.discoverAllServicesAndCharacteristics();
 				if (!connectedDevice) {
-					console.error('Failed to connect to device:', device.name);
+					console.log('Failed to connect to device:', device.name);
 					continue;
 				}
 				verifyiesConnectedDevices.push(device);
@@ -34,7 +34,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 	const streeamRssiToServer = async (connectedDevices: Device[]): Promise<boolean> => {
 		let streamedData = false;
 		const token = await AsyncStorage.getItem('userToken');
-		const ws = new WebSocket(`ws://192.168.1.68:8082/dataingestion?token=${token}`);
+		const ws = new WebSocket(`ws://192.168.84.10:8082/dataingestion?token=${token}`);
 
 		const DELAY_BETWEEN_SENDS = 3000;
 
@@ -54,7 +54,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 									console.log("Device name:", device.name, "RSSI:", rssi.rssi);
 								}
 							} catch (error) {
-								console.error('Failed to get RSSI:', error);
+								console.log('Failed to get RSSI:', error);
 							}
 						}
 
@@ -90,7 +90,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 					// After sending 5 times, close the connection
 					ws.close();
 				} catch (err) {
-					console.error('Error during streaming:', err);
+					console.log('Error during streaming:', err);
 					ws.close();
 					reject(err);
 				}

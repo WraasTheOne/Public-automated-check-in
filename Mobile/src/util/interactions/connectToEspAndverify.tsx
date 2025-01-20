@@ -27,14 +27,14 @@ export const connectToEspAndverify = async (bleManager: BleManager, devices: Dev
 			const connectedDevice = await ConnetAndSendChallange(serverChallenge, bleManager, device);
 
 			if (!connectedDevice) {
-				console.error(`Failed to connect to device: ${device.name}`);
+				console.log(`Failed to connect to device: ${device.name}`);
 				continue;
 			}
 			const computedChallenge = await readChallange(connectedDevice);
 			const approval = await sendChanglheToserver(computedChallenge, serverChallenge);
 
 			if (!approval) {
-				console.error(`Challenge verification failed for device: ${device.name}`);
+				console.log(`Challenge verification failed for device: ${device.name}`);
 				connectedDevice.cancelConnection();
 				continue;
 			}
@@ -44,7 +44,7 @@ export const connectToEspAndverify = async (bleManager: BleManager, devices: Dev
 			console.log(`Successfully connected and verified: ${device.name}`);
 			connectedDevices.push(connectedDevice);
 		} catch (error) {
-			console.error(`Error during connection/verification for device: ${device.name}`, error);
+			console.log(`Error during connection/verification for device: ${device.name}`, error);
 			device.cancelConnection();
 			continue;
 		}

@@ -27,7 +27,7 @@ function espInteractions(): BleInteractions {
 
 			return connectedDevice
 		} catch (error) {
-			console.error('failed to send Challange:', error);
+			console.log('failed to send Challange:', error);
 			return null;
 		}
 	};
@@ -48,7 +48,7 @@ function espInteractions(): BleInteractions {
 			}
 			return '';
 		} catch (error) {
-			console.error('Failed to receive token:', error);
+			console.log('Failed to receive token:', error);
 			return '';
 		}
 	};
