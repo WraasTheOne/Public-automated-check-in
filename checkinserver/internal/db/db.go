@@ -43,7 +43,7 @@ func SetEndLocationinTrip(userID int64, location string) error {
 func GetFinishedUsers() []int64 {
 	query :=  `SELECT id FROM users 
 				WHERE is_checked_in = 1
-				AND TIMESTAMPDIFF(MINUTE, in_transport_updated_at, NOW()) > 2;`
+				AND TIMESTAMPDIFF(MINUTE, in_transport_updated_at, NOW()) > 1;`
 
 	var id int64 
 	err := db.QueryRow(query).Scan(&id)

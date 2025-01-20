@@ -36,7 +36,7 @@ function getRssiFromDetruments(): RssiAndDetruments {
 	const streamOnetime = async (connectedDevices: Device[]): Promise<boolean> => {
 		let streamedData = false;
 		const token = await AsyncStorage.getItem('userToken');
-		const ws = new WebSocket(`ws://192.168.1.68:8082/dataingestion?token=${token}`);
+		const ws = new WebSocket(`ws://192.168.84.10:8082/dataingestion?token=${token}`);
 
 		return new Promise<boolean>((resolve, reject) => {
 			ws.onopen = async () => {
@@ -112,9 +112,9 @@ function getRssiFromDetruments(): RssiAndDetruments {
 	const streeamRssiToServer = async (connectedDevices: Device[]): Promise<boolean> => {
 		let streamedData = false;
 		const token = await AsyncStorage.getItem('userToken');
-		const ws = new WebSocket(`ws://192.168.1.68:8082/dataingestion?token=${token}`);
+		const ws = new WebSocket(`ws://192.168.84.10:8082/dataingestion?token=${token}`);
 
-		const DELAY_BETWEEN_SENDS = 3000;
+		const DELAY_BETWEEN_SENDS = 200;
 
 		return new Promise<boolean>((resolve, reject) => {
 			ws.onopen = async () => {

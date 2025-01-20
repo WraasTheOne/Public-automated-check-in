@@ -38,14 +38,14 @@ interface BleServerInteractions {
 }
 
 const GetChallengeFromServer = async (espId: string): Promise<string> => {
-	//192.168.1.68:8050 /getChallenge/esp/:id
+	//192.168.84.10:8050 /getChallenge/esp/:id
 	//get only the last 4 digits of espId
 	espId = espId.slice(-4);
 	const token = await AsyncStorage.getItem('userToken');
 	if (!token) {
 		throw new Error('No token found');
 	}
-	const response = await fetch(`http://192.168.1.68:8050/getChallenge/esp/${espId}`, {
+	const response = await fetch(`http://192.168.84.10:8050/getChallenge/esp/${espId}`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -63,7 +63,8 @@ const GetChallengeFromServer = async (espId: string): Promise<string> => {
 
 const sendChanglheToserver = async (computedChallange: string, serverChallange: string): Promise<boolean> => {
 	const token = await AsyncStorage.getItem('userToken');
-	const response = await fetch('http://192.168.1.68:8050/verifyChallenge', {
+	const response = await fetch('http://192.168.84.10:8050/verifyChallenge', {
+        
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -86,7 +87,7 @@ const GetCheckInStatus = async (): Promise<[boolean, number]> => {
 	if (!token) {
 		throw new Error('No token found');
 	}
-	const response = await fetch("http://192.168.1.68:8080/checkInStatus", {
+	const response = await fetch("http://192.168.84.10:8080/checkInStatus", {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -104,10 +105,11 @@ const GetCheckInStatus = async (): Promise<[boolean, number]> => {
 
 const GetJourneys = async (): Promise<Journey[]> => {
 	const token = await AsyncStorage.getItem('userToken');
+    console.log(token);
 	if (!token) {
 		throw new Error('No token found');
 	}
-	const response = await fetch("http://192.168.1.68:8080/userjourneys", {
+	const response = await fetch("http://192.168.84.10:8080/userjourneys", {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',

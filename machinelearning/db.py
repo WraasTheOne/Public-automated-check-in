@@ -84,7 +84,8 @@ class MySQLDatabase:
             raise Exception(f"Failed to get current location: {e}")
 
     def set_transport_status(self, user_id, status):
-        query = "UPDATE users SET in_transport = %s WHERE id = %s"
+        ## update the "in_transport_updated_at" now() in the database
+        query = "UPDATE users SET in_transport = %s, in_transport_updated_at = NOW() WHERE id = %s"
         try:
             self.cursor.execute(query, (status, user_id))
             self.connection.commit()

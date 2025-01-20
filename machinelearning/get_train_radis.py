@@ -3,8 +3,12 @@ import csv
 
 def append_train_data(is_checkin="no", output_csv="train_data.csv"):
     readis = ReadStreamReadsOperation()
-    token = "7a91f4aaf7d909d56992c8c17b5bf18d58fb7db12f9ec97dcf958ba0f229f18c"
-    
+
+    token = "9af8a5102e67da5e29408341a6de3fda141a1757a19c520b6890955fec9c04b5"
+
+
+    print(f"testest ")
+
     # Fetch data from the stream
     get_data = readis.read_stream(token)  
     print(get_data)
@@ -14,7 +18,7 @@ def append_train_data(is_checkin="no", output_csv="train_data.csv"):
         # Define the column headers (ensure consistency with the existing file)
         fieldnames = ['esp1id', 'rssi1', 'esp2id', 'rssi2', 'is_checkin', 'Passangercount']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        
+
         # Iterate over the stream data
         for entry_id, entry_data in get_data:
             # Decode byte data into strings
@@ -34,5 +38,4 @@ def append_train_data(is_checkin="no", output_csv="train_data.csv"):
     print(f"Appended data with is_checkin='{is_checkin}' to {output_csv}")
 
 if __name__ == "__main__":
-    append_train_data(is_checkin="no", output_csv="train_data.csv")
-    
+    append_train_data(is_checkin="yes", output_csv="train_data.csv")

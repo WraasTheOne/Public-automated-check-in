@@ -49,6 +49,7 @@ function useBle(): BlueToothLowEnergy {
 			}
 
 			if (device?.name && device.name.startsWith("ESP32")) {
+                console.log("Device found", device.name);
 				setAllDevices((prevDevices) => {
 					if (!prevDevices.some((d) => d.id === device.id)) {
 						if (!verifyiedList.some((d) => d.id === device.id)) {
@@ -66,7 +67,6 @@ function useBle(): BlueToothLowEnergy {
 				console.log("No devices found");
 				setIsScanning(true);
 			}
-
 			bleManager.stopDeviceScan();
 			setIsScanning(false);
 		}, 3000)
@@ -76,7 +76,7 @@ function useBle(): BlueToothLowEnergy {
 
 		if (redyToScan) {
 			setRedyToScan(false);
-			setTimeout(() => { startScan(); }, 20000);
+			setTimeout(() => { startScan(); }, 5000);
 		}
 
 	}, [redyToScan]);

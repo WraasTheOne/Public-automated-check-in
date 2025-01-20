@@ -11,7 +11,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 
 const login = async (username: string, password: string) => {
-	const response = await fetch('http://192.168.1.68:8080/login', {
+	const response = await fetch('http://192.168.84.10:8080/login', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -28,7 +28,7 @@ const login = async (username: string, password: string) => {
 	throw new Error(data.message);
 };
 const register = async (username: string, password: string) => {
-	const response = await fetch('http://192.168.1.68:8080/register', {
+	const response = await fetch('http://192.168.84.10:8080/register', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

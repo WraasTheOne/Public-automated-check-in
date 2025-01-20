@@ -3,7 +3,6 @@ package main
 import (
 	"Public-automated-check-in/checkinserver/internal/services"
 	"time"
-
 )
 
 

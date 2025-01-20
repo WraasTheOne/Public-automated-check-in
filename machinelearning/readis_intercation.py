@@ -3,6 +3,8 @@ import redis
 class ReadStreamReadsOperation:
     def __init__(self, host='localhost', port=6380, db=0):
         self.client = redis.StrictRedis(host=host, port=port, db=db)
+        # print connection status
+
 
     def get_keys_from_stream(self):
         keys = self.client.keys()
